@@ -1,0 +1,271 @@
+import { CanvasData } from "../persistor";
+import { NLParser } from "./parser";
+import { CanvasCompiler } from "./compiler";
+import { 
+	GenerationResult, 
+	ValidationResult, 
+	GenerationOptions, 
+	CannoliIntent,
+	cannoliIntentSchema 
+} from "./types";
+
+/**
+ * Main API for Natural Language to Cannoli generation
+ */
+
+/**
+ * Generate a Cannoli canvas from natural language description
+ */
+export async function generateCanvasFromNL(
+	spec: string, 
+	options: GenerationOptions = {}
+): Promise<GenerationResult> {
+	const parser = new NLParser(options);
+	const compiler = new CanvasCompiler();
+
+	try {
+		// Parse natural language to IR
+		const ir = parser.parseToIntent(spec);
+		
+		// Validate IR
+		const validation = compiler.validateIR(ir);
+		if (validation.errors.length > 0) {
+			return {
+				canvas: { nodes: [], edges: [] },
+				report: {
+					assumptions: [],
+					warnings: validation.warnings,
+					questions: [`Generation failed with errors: ${validation.errors.join(", ")}`],
+				},
+			};
+		}
+
+		// Compile to canvas
+		const canvas = compiler.compileToCanvas(ir);
+
+		return {
+			canvas,
+			report: {
+				assumptions: ir.meta.assumptions,
+				warnings: validation.warnings,
+				questions: [],
+			},
+			ir: options.includeIR ? ir : undefined,
+		};
+	} catch (error) {
+		return {
+			canvas: { nodes: [], edges: [] },
+			report: {
+				assumptions: [],
+				warnings: [],
+				questions: [`Generation failed: ${error instanceof Error ? error.message : "Unknown error"}`],
+			},
+		};
+	}
+}
+
+/**
+ * Validate a Cannoli canvas
+ */
+export function validateCanvas(canvas: object): ValidationResult {
+	const errors: string[] = [];
+	const warnings: string[] = [];
+
+	try {
+		// Basic structure validation
+		const canvasData = canvas as CanvasData;
+		
+		if (!canvasData.nodes || !Array.isArray(canvasData.nodes)) {
+			errors.push("Canvas must have a 'nodes' array");
+		}
+
+		if (!canvasData.edges || !Array.isArray(canvasData.edges)) {
+			errors.push("Canvas must have an 'edges' array");
+		}
+
+		if (errors.length > 0) {
+			return { errors, warnings };
+		}
+
+		// Validate node structure
+		canvasData.nodes.forEach((node, index) => {
+			if (!node.id) errors.push(`Node at index ${index} missing required 'id' field`);
+			if (!node.type) errors.push(`Node at index ${index} missing required 'type' field`);
+			if (typeof node.x !== "number") errors.push(`Node ${node.id} missing valid 'x' coordinate`);
+			if (typeof node.y !== "number") errors.push(`Node ${node.id} missing valid 'y' coordinate`);
+			if (typeof node.width !== "number") errors.push(`Node ${node.id} missing valid 'width'`);
+			if (typeof node.height !== "number") errors.push(`Node ${node.id} missing valid 'height'`);
+		});
+
+		// Validate edge structure
+		const nodeIds = new Set(canvasData.nodes.map(n => n.id));
+		canvasData.edges.forEach((edge, index) => {
+			if (!edge.id) errors.push(`Edge at index ${index} missing required 'id' field`);
+			if (!edge.fromNode) errors.push(`Edge at index ${index} missing required 'fromNode' field`);
+			if (!edge.toNode) errors.push(`Edge at index ${index} missing required 'toNode' field`);
+			
+			if (!nodeIds.has(edge.fromNode)) {
+				errors.push(`Edge ${edge.id} references non-existent fromNode: ${edge.fromNode}`);
+			}
+			if (!nodeIds.has(edge.toNode)) {
+				errors.push(`Edge ${edge.id} references non-existent toNode: ${edge.toNode}`);
+			}
+		});
+
+		// Check for Cannoli-specific issues
+		const aiNodes = canvasData.nodes.filter(n => 
+			n.type === "text" && (!n.color || n.color === "0")
+		);
+		const contentNodes = canvasData.nodes.filter(n => 
+			n.type === "text" && n.color === "6"
+		);
+		const actionNodes = canvasData.nodes.filter(n => 
+			n.type === "text" && n.color === "2"
+		);
+
+		if (aiNodes.length === 0 && contentNodes.length === 0 && actionNodes.length === 0) {
+			warnings.push("Canvas appears to be empty or contains no recognizable Cannoli nodes");
+		}
+
+		// Check for cannoli group
+		const cannoliGroups = canvasData.nodes.filter(n => 
+			n.type === "group" && (n as any).label === "cannoli"
+		);
+		if (cannoliGroups.length === 0) {
+			warnings.push("Canvas does not contain a 'cannoli' group. Consider wrapping your workflow in a cannoli group to prevent accidental execution.");
+		}
+
+	} catch (error) {
+		errors.push(`Canvas validation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+	}
+
+	return { errors, warnings };
+}
+
+/**
+ * Explain a canvas in natural language
+ */
+export function explainCanvas(canvas: object): string {
+	try {
+		const canvasData = canvas as CanvasData;
+		const parts: string[] = [];
+
+		// Count node types
+		const nodeTypes = {
+			ai: 0,
+			content: 0,
+			action: 0,
+			group: 0,
+			file: 0,
+			link: 0,
+		};
+
+		canvasData.nodes.forEach(node => {
+			switch (node.type) {
+				case "text":
+					if (!node.color || node.color === "0") {
+						nodeTypes.ai++;
+					} else if (node.color === "6") {
+						nodeTypes.content++;
+					} else if (node.color === "2") {
+						nodeTypes.action++;
+					}
+					break;
+				case "group":
+					nodeTypes.group++;
+					break;
+				case "file":
+					nodeTypes.file++;
+					break;
+				case "link":
+					nodeTypes.link++;
+					break;
+			}
+		});
+
+		parts.push(`This canvas contains ${canvasData.nodes.length} nodes and ${canvasData.edges.length} edges.`);
+
+		if (nodeTypes.ai > 0) parts.push(`${nodeTypes.ai} AI node(s)`);
+		if (nodeTypes.content > 0) parts.push(`${nodeTypes.content} content node(s)`);
+		if (nodeTypes.action > 0) parts.push(`${nodeTypes.action} action node(s)`);
+		if (nodeTypes.group > 0) parts.push(`${nodeTypes.group} group(s)`);
+		if (nodeTypes.file > 0) parts.push(`${nodeTypes.file} file node(s)`);
+		if (nodeTypes.link > 0) parts.push(`${nodeTypes.link} link node(s)`);
+
+		// Analyze edge types
+		const edgeTypes = new Map<string, number>();
+		canvasData.edges.forEach(edge => {
+			if (edge.color === "2") {
+				edgeTypes.set(edge.label ? "config" : "logging", (edgeTypes.get(edge.label ? "config" : "logging") || 0) + 1);
+			} else if (edge.color === "3") {
+				edgeTypes.set("choice", (edgeTypes.get("choice") || 0) + 1);
+			} else if (edge.color === "4") {
+				edgeTypes.set("chat", (edgeTypes.get("chat") || 0) + 1);
+			} else if (edge.color === "5") {
+				edgeTypes.set("list", (edgeTypes.get("list") || 0) + 1);
+			} else if (edge.color === "6") {
+				edgeTypes.set("field", (edgeTypes.get("field") || 0) + 1);
+			} else if (edge.label && !edge.color) {
+				edgeTypes.set("variable", (edgeTypes.get("variable") || 0) + 1);
+			} else {
+				edgeTypes.set("basic", (edgeTypes.get("basic") || 0) + 1);
+			}
+		});
+
+		if (edgeTypes.size > 0) {
+			parts.push("Edge types: " + Array.from(edgeTypes.entries()).map(([type, count]) => `${count} ${type}`).join(", "));
+		}
+
+		// Check for special features
+		const cannoliGroups = canvasData.nodes.filter(n => 
+			n.type === "group" && (n as any).label === "cannoli"
+		);
+		if (cannoliGroups.length > 0) {
+			parts.push("Wrapped in cannoli group for controlled execution.");
+		}
+
+		return parts.join(". ");
+
+	} catch (error) {
+		return `Could not explain canvas: ${error instanceof Error ? error.message : "Unknown error"}`;
+	}
+}
+
+/**
+ * Refine canvas or IR with user answers to clarification questions
+ */
+export function refineWithAnswers(
+	canvasOrIR: object, 
+	answers: Record<string, string>
+): GenerationResult {
+	// For this basic implementation, we'll return the original canvas
+	// In a more advanced version, this would re-process based on answers
+	return {
+		canvas: canvasOrIR,
+		report: {
+			assumptions: ["Refinement not yet implemented in basic version"],
+			warnings: [],
+			questions: [],
+		},
+	};
+}
+
+/**
+ * Validate an IR object against the schema
+ */
+export function validateIR(ir: object): ValidationResult {
+	try {
+		cannoliIntentSchema.parse(ir);
+		return { errors: [], warnings: [] };
+	} catch (error) {
+		return {
+			errors: [`IR validation failed: ${error instanceof Error ? error.message : "Unknown error"}`],
+			warnings: [],
+		};
+	}
+}
+
+// Export types for consumers
+export * from "./types";
+export { NLParser } from "./parser";
+export { CanvasCompiler } from "./compiler";
