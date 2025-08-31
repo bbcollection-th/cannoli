@@ -134,7 +134,7 @@ export class CanvasCompiler {
 					url: node.url || "",
 				};
 
-			case "group":
+			case "group": {
 				const groupNode: CanvasGroupData = {
 					...baseNode,
 					type: "group",
@@ -147,6 +147,7 @@ export class CanvasCompiler {
 				}
 				
 				return groupNode;
+			}
 
 			default:
 				return null;
