@@ -15,3 +15,22 @@ export type {
 	BakeResult,
 } from "./bake";
 export * from "./actions";
+export { 
+	generateCanvasFromNL,
+	validateCanvas,
+	explainCanvas,
+	refineWithAnswers,
+	validateIR,
+} from "./nl-generator";
+export type {
+	CannoliIntent,
+	CannoliIntentMeta,
+	CannoliIntentIO,
+	CannoliIntentNode,
+	CannoliIntentEdge,
+	CannoliIntentLayout,
+	GenerationResult,
+	ValidationResult,
+	GenerationOptions,
+} from "./nl-generator";
+export { testNLGenerator } from "./nl-generator/test";
