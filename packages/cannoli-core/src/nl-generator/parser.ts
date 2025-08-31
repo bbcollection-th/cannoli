@@ -94,7 +94,7 @@ export class NLParser {
 		}
 
 		// Look for actions
-		if (nl.includes("http") || nl.includes("request") || nl.includes("api") || nl.includes("get") || nl.includes("post")) {
+		if (/\b(http|request|api)\b/i.test(nl) || /\b(get|post|put|delete|patch)\b/i.test(nl)) {
 			steps.push({
 				type: "action",
 				description: "HTTP action step",
