@@ -58,12 +58,17 @@ export class CanvasCompiler {
 	 * Compile a single node
 	 */
 	private compileNode(node: CannoliIntentNode, id: string): CanvasNodeData | null {
+		const width = node.attrs?.width ?? 250;
+		const height = node.attrs?.height ?? 60;
+		// couleur "auto" si non fournie
+		const colorAuto = node.attrs?.color ?? "auto";
+
 		const baseNode = {
 			id,
 			x: 0, // Will be set by layout
 			y: 0, // Will be set by layout  
-			width: node.attrs.width,
-			height: node.attrs.height,
+			width,
+			height,
 		};
 
 		switch (node.kind) {
