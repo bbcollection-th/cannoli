@@ -263,8 +263,6 @@ export class CanvasCompiler {
 					label: edge.label,
 				};
 
-@@ packages/cannoli-core/src/nl-generator/compiler.ts
--			case "chat":
 			case "chat": {
 				let chatLabel = edge.label || "";
 

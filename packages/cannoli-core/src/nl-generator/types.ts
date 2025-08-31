@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CanvasData } from "../persistor";
 
 /**
  * Intermediate Representation (IR) schema for Natural Language to Cannoli generation
@@ -41,8 +42,6 @@ export const cannoliIntentNodeSchema = z.object({
 		"link",
 		"group",
 	]),
-	// …rest of schema
-});
 	name: z.string().optional(),
 	text: z.string().optional(),
 	action: z.string().optional(),
@@ -72,7 +71,7 @@ export const cannoliIntentNodeSchema = z.object({
 		temperature: z.number().optional(),
 		role: z.string().optional(),
 		enableVision: z.boolean().optional(),
-		stop: z.string().optional(),
+		stop: z.union([z.string(), z.array(z.string())]).optional(),
 	}).default({}),
 });
 
@@ -116,7 +115,7 @@ export type CannoliIntent = z.infer<typeof cannoliIntentSchema>;
  * Generation result containing the canvas, report and optional IR
  */
 export interface GenerationResult {
-	canvas: object;
+	canvas: CanvasData;
 	report: {
 		assumptions: string[];
 		warnings: string[];
