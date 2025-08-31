@@ -29,8 +29,20 @@ export const cannoliIntentIOSchema = z.object({
 });
 
 export const cannoliIntentNodeSchema = z.object({
-	id: z.string().optional(),
-	kind: z.enum(["ai", "content", "action", "formatter", "reference", "floating", "file", "link", "group"]),
+	id: z.string().regex(/^[0-9a-f]{16}$/i, "ID attendu: 16 hex").optional(),
+	kind: z.enum([
+		"ai",
+		"content",
+		"action",
+		"formatter",
+		"reference",
+		"floating",
+		"file",
+		"link",
+		"group",
+	]),
+	// …rest of schema
+});
 	name: z.string().optional(),
 	text: z.string().optional(),
 	action: z.string().optional(),
