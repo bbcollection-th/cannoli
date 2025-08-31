@@ -242,7 +242,7 @@ export class CanvasCompiler {
 					label: edge.label || "field",
 				};
 
-			case "choice":
+			case "choice": {
 				let choiceLabel = edge.label || "option";
 				// Add history modifier if needed
 				if (edge.chatHistory === "suppress") {
@@ -255,7 +255,7 @@ export class CanvasCompiler {
 					color: "3", // Yellow
 					label: choiceLabel,
 				};
-
+			}
 			case "list":
 				return {
 					...baseEdge,
