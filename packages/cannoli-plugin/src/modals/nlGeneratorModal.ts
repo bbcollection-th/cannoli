@@ -42,14 +42,15 @@ export class NLGeneratorModal extends Modal {
 			.setDesc("Enter a natural language description of the Cannoli workflow you want to create")
 			.addTextArea(text => {
 				this.textArea = text;
-				text.setPlaceholder("e.g., 'Ask the AI to summarize {{article}} and write it to a note'")
-					.setValue("")
-					.then(() => {
-						// Focus and expand the textarea
-						text.inputEl.focus();
-						text.inputEl.style.height = "150px";
-						text.inputEl.style.width = "100%";
-					});
+				text
+					.setPlaceholder("e.g., 'Ask the AI to summarize {{article}} and write it to a note'")
+					.setValue("");
+				// Focus après rendu
+				window.setTimeout(() => {
+					text.inputEl.focus();
+					text.inputEl.style.height = "150px";
+					text.inputEl.style.width = "100%";
+				}, 0);
 			});
 
 		// Buttons
