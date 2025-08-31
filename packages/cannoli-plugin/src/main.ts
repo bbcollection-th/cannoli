@@ -37,6 +37,7 @@ import { ValTownModal } from "./modals/viewVals";
 import { EditValModal } from "./modals/editVal";
 import { RunPriceAlertModal } from "./modals/runPriceAlert";
 import { CannoliSettings, DEFAULT_SETTINGS } from "./settings/settings";
+import { CannoliSettingTab } from "./settings/settingsTab";
 import { NLGeneratorModal } from "./modals/nlGeneratorModal";
 
 export default class Cannoli extends Plugin {
