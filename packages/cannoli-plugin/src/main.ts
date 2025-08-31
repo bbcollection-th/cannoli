@@ -25,9 +25,6 @@ import {
 	CannoliFunctionInfo,
 	parseCannoliFunctionInfo,
 	BakeResult,
-	generateCanvasFromNL,
-	validateCanvas,
-	explainCanvas,
 } from "@deablabs/cannoli-core";
 import { cannoliCollege } from "../assets/cannoliCollege";
 import { cannoliIcon } from "../assets/cannoliIcon";
