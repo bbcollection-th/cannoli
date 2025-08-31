@@ -46,7 +46,11 @@ export async function testNLGenerator(): Promise<void> {
 			console.log("✅ Canvas has valid structure with nodes and edges");
 			
 			// Check for cannoli group
-			const cannoliGroup = canvas.nodes.find((n: any) => n.type === "group" && n.label === "cannoli");
+			const cannoliGroup = canvas.nodes.find((n: any) => 
+				n.type === "group" && 
+				typeof n.label === "string" && 
+				n.label.toLowerCase() === "cannoli"
+			);
 			if (cannoliGroup) {
 				console.log("✅ Canvas is wrapped in cannoli group");
 			}

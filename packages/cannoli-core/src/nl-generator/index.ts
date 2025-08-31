@@ -37,6 +37,7 @@ export async function generateCanvasFromNL(
 					warnings: validation.warnings,
 					questions: [`Generation failed with errors: ${validation.errors.join(", ")}`],
 				},
+				ir: options.includeIR ? ir : undefined,
 			};
 		}
 
@@ -46,7 +47,7 @@ export async function generateCanvasFromNL(
 		return {
 			canvas,
 			report: {
-				assumptions: ir.meta.assumptions,
+				assumptions: ir.meta?.assumptions ?? [],
 				warnings: validation.warnings,
 				questions: [],
 			},
@@ -128,8 +129,10 @@ export function validateCanvas(canvas: object): ValidationResult {
 		}
 
 		// Check for cannoli group
-		const cannoliGroups = canvasData.nodes.filter(n => 
-			n.type === "group" && (n as any).label === "cannoli"
+		const cannoliGroups = canvasData.nodes.filter(n =>
+			n.type === "group" &&
+			typeof (n as any).label === "string" &&
+			(n as any).label.toLowerCase() === "cannoli"
 		);
 		if (cannoliGroups.length === 0) {
 			warnings.push("Canvas does not contain a 'cannoli' group. Consider wrapping your workflow in a cannoli group to prevent accidental execution.");
@@ -205,7 +208,7 @@ export function explainCanvas(canvas: object): string {
 				edgeTypes.set("list", (edgeTypes.get("list") || 0) + 1);
 			} else if (edge.color === "6") {
 				edgeTypes.set("field", (edgeTypes.get("field") || 0) + 1);
-			} else if (edge.label && !edge.color) {
+			} else if (edge.label && /{{[^}]+}}/.test(edge.label) && !edge.color) {
 				edgeTypes.set("variable", (edgeTypes.get("variable") || 0) + 1);
 			} else {
 				edgeTypes.set("basic", (edgeTypes.get("basic") || 0) + 1);
@@ -217,14 +220,17 @@ export function explainCanvas(canvas: object): string {
 		}
 
 		// Check for special features
-		const cannoliGroups = canvasData.nodes.filter(n => 
-			n.type === "group" && (n as any).label === "cannoli"
+		const cannoliGroups = canvasData.nodes.filter(n =>
+			n.type === "group" &&
+			typeof (n as any).label === "string" &&
+			(n as any).label.toLowerCase() === "cannoli"
 		);
 		if (cannoliGroups.length > 0) {
 			parts.push("Wrapped in cannoli group for controlled execution.");
 		}
 
-		return parts.join(". ");
+		const out = parts.join(". ");
+		return out.endsWith(".") ? out : out + ".";
 
 	} catch (error) {
 		return `Could not explain canvas: ${error instanceof Error ? error.message : "Unknown error"}`;
@@ -240,8 +246,35 @@ export function refineWithAnswers(
 ): GenerationResult {
 	// For this basic implementation, we'll return the original canvas
 	// In a more advanced version, this would re-process based on answers
+	const maybeIR = cannoliIntentSchema.safeParse(canvasOrIR);
+	if (maybeIR.success) {
+		const ir = maybeIR.data;
+		const compiler = new CanvasCompiler();
+		const validation = compiler.validateIR(ir);
+		if (validation.errors.length > 0) {
+			return {
+				canvas: { nodes: [], edges: [] },
+				report: {
+					assumptions: [],
+					warnings: validation.warnings,
+					questions: [`Refinement received invalid IR: ${validation.errors.join(", ")}`],
+				},
+				ir,
+			};
+		}
+		const canvas = compiler.compileToCanvas(ir);
+		return {
+			canvas,
+			report: {
+				assumptions: ["Refinement not yet implemented in basic version"],
+				warnings: validation.warnings,
+				questions: [],
+			},
+			ir,
+		};
+	}
 	return {
-		canvas: canvasOrIR,
+		canvas: canvasOrIR as CanvasData,
 		report: {
 			assumptions: ["Refinement not yet implemented in basic version"],
 			warnings: [],

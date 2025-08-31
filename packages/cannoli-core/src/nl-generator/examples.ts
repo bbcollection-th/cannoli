@@ -107,7 +107,9 @@ function analyzeCanvasFeatures(canvas: any): string[] {
 		content: canvas.nodes.filter((n: any) => n.type === "text" && n.color === "6").length,
 		action: canvas.nodes.filter((n: any) => n.type === "text" && n.color === "2").length,
 		group: canvas.nodes.filter((n: any) => n.type === "group").length,
-		cannoliGroup: canvas.nodes.filter((n: any) => n.type === "group" && n.label === "cannoli").length,
+		cannoliGroup: canvas.nodes.filter(
+			(n: any) => n.type === "group" && typeof n.label === "string" && n.label.toLowerCase() === "cannoli"
+		).length,
 	};
 	
 	if (nodeTypes.ai > 0) features.push(`${nodeTypes.ai} AI node${nodeTypes.ai > 1 ? "s" : ""}`);

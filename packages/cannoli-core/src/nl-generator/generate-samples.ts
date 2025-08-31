@@ -64,11 +64,13 @@ export async function generateSampleCanvases(): Promise<void> {
 			}
 
 			// Add metadata to the canvas
+			const VERSION = "1.0-1.0";
+			const GENERATOR = "Cannoli NL Generator";
 			const canvasWithMetadata = {
 				...result.canvas,
 				metadata: {
-					version: "1.0-1.0",
-					generatedBy: "Cannoli NL Generator",
+					version: VERSION,
+					generatedBy: GENERATOR,
 					originalInput: example.input,
 					generatedAt: new Date().toISOString(),
 				},

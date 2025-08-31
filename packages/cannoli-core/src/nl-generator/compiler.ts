@@ -1,4 +1,4 @@
-import { CanvasData, CanvasNodeData, CanvasEdgeData, CanvasGroupData } from "../persistor";
+import { CanvasData, AllCanvasNodeData, CanvasEdgeData, CanvasGroupData } from "../persistor";
 import { CannoliIntent, CannoliIntentNode, CannoliIntentEdge, ValidationResult } from "./types";
 
 /**
@@ -57,7 +57,7 @@ export class CanvasCompiler {
 	/**
 	 * Compile a single node
 	 */
-	private compileNode(node: CannoliIntentNode, id: string): CanvasNodeData | null {
+	private compileNode(node: CannoliIntentNode, id: string): AllCanvasNodeData | null {
 		const width = node.attrs?.width ?? 250;
 		const height = node.attrs?.height ?? 60;
 		// couleur "auto" si non fournie
@@ -100,8 +100,8 @@ export class CanvasCompiler {
 				return {
 					...baseNode,
 					type: "text",
-					text: `""${node.text || ""}""`, // Double-double quotes for formatters
-					color: node.attrs.color === "auto" ? "6" : node.attrs.color,
+					text: `"${node.text || ""}"`, // Single quotes for formatters
+					color: node.attrs?.color === "auto" ? "6" : node.attrs?.color,
 				};
 
 			case "reference":
@@ -204,6 +204,8 @@ export class CanvasCompiler {
 			id: this.generateId(),
 			fromNode: fromId,
 			toNode: toId,
+			fromSide: "right" as const,
+			toSide: "left" as const,
 		};
 
 		// Apply edge type styling
@@ -300,7 +302,7 @@ export class CanvasCompiler {
 	private applyLayout(canvas: CanvasData, ir: CannoliIntent): void {
 		const layout = ir.layout;
 		
-		if (layout.strategy === "dag") {
+		if (layout.strategy === "dag" || (layout.strategy === "auto" && !this.hasCycles(ir))) {
 			this.applyDAGLayout(canvas, ir);
 		} else {
 			this.applyGridLayout(canvas);
