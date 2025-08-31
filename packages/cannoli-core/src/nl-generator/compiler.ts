@@ -263,28 +263,31 @@ export class CanvasCompiler {
 					label: edge.label,
 				};
 
-			case "chat":
+@@ packages/cannoli-core/src/nl-generator/compiler.ts
+-			case "chat":
+			case "chat": {
 				let chatLabel = edge.label || "";
-				
-				// Add limits to label
-				if (edge.limits?.messages) {
-					chatLabel = edge.limits.messages.toString();
-				} else if (edge.limits?.tokens) {
-					chatLabel = `#${edge.limits.tokens}`;
-				}
 
-				// Add history modifiers
-				if (edge.chatHistory === "suppress") {
-					chatLabel += "~";
-				} else if (edge.chatHistory === "force") {
-					chatLabel += "|";
-				}
+ 				// Add limits to label
+ 				if (edge.limits?.messages) {
+ 					chatLabel = edge.limits.messages.toString();
+ 				} else if (edge.limits?.tokens) {
+ 					chatLabel = `#${edge.limits.tokens}`;
+ 				}
 
-				return {
-					...baseEdge,
-					color: "4", // Green for chat
-					label: chatLabel || undefined,
-				};
+ 				// Add history modifiers
+ 				if (edge.chatHistory === "suppress") {
+ 					chatLabel += "~";
+ 				} else if (edge.chatHistory === "force") {
+ 					chatLabel += "|";
+ 				}
+
+ 				return {
+ 					...baseEdge,
+ 					color: "4", // Green for chat
+ 					label: chatLabel || undefined,
+ 				};
+			}
 
 			default:
 				return {
