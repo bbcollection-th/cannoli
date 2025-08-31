@@ -17,16 +17,19 @@ export class CanvasCompiler {
 			edges: [],
 		};
 
-		// Generate node IDs first
+		// Generate node IDs for nodes that don't have them
 		const nodeIdMap = new Map<string, string>();
 		ir.nodes.forEach((node, index) => {
+			const originalId = node.id || `node_${index}`;
 			const canvasId = node.id || this.generateId();
-			nodeIdMap.set(node.id || `node_${index}`, canvasId);
+			nodeIdMap.set(originalId, canvasId);
 		});
 
 		// Create nodes
 		ir.nodes.forEach((node, index) => {
-			const canvasNode = this.compileNode(node, nodeIdMap.get(node.id || `node_${index}`)!);
+			const originalId = node.id || `node_${index}`;
+			const canvasId = nodeIdMap.get(originalId)!;
+			const canvasNode = this.compileNode(node, canvasId);
 			if (canvasNode) {
 				canvas.nodes.push(canvasNode);
 			}

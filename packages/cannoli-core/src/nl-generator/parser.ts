@@ -57,8 +57,22 @@ export class NLParser {
 	private extractSteps(nl: string): WorkflowStep[] {
 		const steps: WorkflowStep[] = [];
 		
+		// Look for system prompts first
+		if (nl.includes("system:") || nl.includes("system prompt")) {
+			const systemMatch = nl.match(/system[:\s]+['""]?([^.'""\n]+)['""]?/i);
+			if (systemMatch) {
+				steps.push({
+					type: "content",
+					description: "System prompt",
+					prompt: systemMatch[1].trim(),
+					role: "system",
+				});
+			}
+		}
+		
 		// Look for AI operations
-		if (nl.includes("ai") || nl.includes("gpt") || nl.includes("chatgpt") || nl.includes("llm")) {
+		if (nl.includes("ai") || nl.includes("gpt") || nl.includes("chatgpt") || nl.includes("llm") || 
+			nl.includes("ask") || nl.includes("prompt")) {
 			steps.push({
 				type: "ai",
 				description: "AI processing step",
@@ -67,7 +81,8 @@ export class NLParser {
 		}
 
 		// Look for content operations
-		if (nl.includes("write") || nl.includes("save") || nl.includes("output")) {
+		if (nl.includes("write") || nl.includes("save") || nl.includes("output") || 
+			nl.includes("result") || nl.includes("response")) {
 			steps.push({
 				type: "content",
 				description: "Content output step",
@@ -75,7 +90,7 @@ export class NLParser {
 		}
 
 		// Look for actions
-		if (nl.includes("http") || nl.includes("request") || nl.includes("api")) {
+		if (nl.includes("http") || nl.includes("request") || nl.includes("api") || nl.includes("get") || nl.includes("post")) {
 			steps.push({
 				type: "action",
 				description: "HTTP action step",
@@ -91,7 +106,18 @@ export class NLParser {
 			});
 		}
 
-		return steps.length > 0 ? steps : [{ type: "ai", description: "Default AI step" }];
+		// If no specific steps found, default to AI + Content
+		if (steps.length === 0) {
+			steps.push(
+				{ type: "ai", description: "Default AI step", prompt: this.extractPrompt(nl) },
+				{ type: "content", description: "Default content output" }
+			);
+		} else if (steps.length === 1 && steps[0].type === "ai") {
+			// If only AI step, add content output
+			steps.push({ type: "content", description: "Content output step" });
+		}
+
+		return steps;
 	}
 
 	private extractPrompt(nl: string): string {
@@ -219,9 +245,17 @@ export class NLParser {
 		const edges: CannoliIntentEdge[] = [];
 		const assumptions: string[] = [];
 
+		// Generate unique node IDs
+		let nodeIdCounter = 0;
+		const generateNodeId = (prefix: string) => `${prefix}_${++nodeIdCounter}`;
+
 		// Create input nodes
+		const inputNodeIds = new Map<string, string>();
 		plan.inputs.forEach(input => {
+			const nodeId = generateNodeId("input");
+			inputNodeIds.set(input, nodeId);
 			nodes.push({
+				id: nodeId,
 				kind: "content",
 				name: input,
 				text: `[${input}]`,
@@ -230,10 +264,11 @@ export class NLParser {
 		});
 
 		// Create main workflow nodes
-		let previousNodeId: string | null = null;
+		const stepNodeIds: string[] = [];
 		
 		plan.steps.forEach((step, index) => {
-			const nodeId = `step_${index}`;
+			const nodeId = generateNodeId("step");
+			stepNodeIds.push(nodeId);
 			
 			switch (step.type) {
 				case "ai":
@@ -241,16 +276,32 @@ export class NLParser {
 						id: nodeId,
 						kind: "ai",
 						text: step.prompt || plan.objective,
-						attrs: { color: "auto" },
+						attrs: { 
+							color: "auto",
+							role: step.role || "user",
+						},
 					});
 					break;
 				case "content":
-					nodes.push({
-						id: nodeId,
-						kind: "content",
-						text: "",
-						attrs: { color: "6" },
-					});
+					if (step.role === "system") {
+						// System prompt as content node
+						nodes.push({
+							id: nodeId,
+							kind: "content",
+							text: step.prompt || "",
+							attrs: { 
+								color: "6",
+								role: "system",
+							},
+						});
+					} else {
+						nodes.push({
+							id: nodeId,
+							kind: "content",
+							text: "",
+							attrs: { color: "6" },
+						});
+					}
 					break;
 				case "action":
 					nodes.push({
@@ -262,33 +313,48 @@ export class NLParser {
 					break;
 			}
 
-			// Connect to previous node
-			if (previousNodeId) {
-				edges.push({
-					from: previousNodeId,
-					to: nodeId,
-					type: "basic",
-				});
-			}
-
-			// Connect inputs to first node
-			if (index === 0) {
-				plan.inputs.forEach(input => {
+			// Connect to previous step
+			if (index > 0) {
+				const prevStep = plan.steps[index - 1];
+				const currentStep = plan.steps[index];
+				
+				// Special handling for system prompts
+				if (prevStep.role === "system" && currentStep.type === "ai") {
 					edges.push({
-						from: `input_${input}`,
+						from: stepNodeIds[index - 1],
 						to: nodeId,
-						type: "variable",
-						label: input,
+						type: "basic", // System message edge
 					});
-				});
+				} else {
+					edges.push({
+						from: stepNodeIds[index - 1],
+						to: nodeId,
+						type: "basic",
+					});
+				}
 			}
 
-			previousNodeId = nodeId;
+			// Connect inputs to first AI step (not system prompts)
+			if (index === 0 || (index > 0 && plan.steps[index - 1].role === "system" && step.type === "ai")) {
+				plan.inputs.forEach(input => {
+					const inputNodeId = inputNodeIds.get(input);
+					if (inputNodeId) {
+						edges.push({
+							from: inputNodeId,
+							to: nodeId,
+							type: "variable",
+							label: input,
+						});
+					}
+				});
+			}
 		});
 
 		// Create output nodes
+		const outputNodeIds = new Map<string, string>();
 		plan.outputs.forEach(output => {
-			const outputNodeId = `output_${output}`;
+			const outputNodeId = generateNodeId("output");
+			outputNodeIds.set(output, outputNodeId);
 			nodes.push({
 				id: outputNodeId,
 				kind: "content",
@@ -298,18 +364,71 @@ export class NLParser {
 			});
 
 			// Connect last step to output
-			if (previousNodeId) {
+			const lastStepId = stepNodeIds[stepNodeIds.length - 1];
+			if (lastStepId) {
 				edges.push({
-					from: previousNodeId,
+					from: lastStepId,
 					to: outputNodeId,
 					type: "basic",
 				});
 			}
 		});
 
+		// Handle configurations
+		Object.entries(plan.configs).forEach(([configKey, configValue]) => {
+			const configNodeId = generateNodeId("config");
+			nodes.push({
+				id: configNodeId,
+				kind: "content",
+				text: configValue,
+				attrs: { color: "6" },
+			});
+
+			// Connect config to AI nodes
+			stepNodeIds.forEach(stepId => {
+				const step = nodes.find(n => n.id === stepId);
+				if (step && step.kind === "ai") {
+					edges.push({
+						from: configNodeId,
+						to: stepId,
+						type: "config",
+						label: configKey,
+					});
+				}
+			});
+		});
+
+		// Handle choices/conditions
+		plan.conditions.forEach(condition => {
+			if (condition.type === "choice" && condition.options.length > 0) {
+				const lastStepId = stepNodeIds[stepNodeIds.length - 1];
+				if (lastStepId) {
+					condition.options.forEach(option => {
+						const choiceNodeId = generateNodeId("choice");
+						nodes.push({
+							id: choiceNodeId,
+							kind: "content",
+							text: `Response for ${option}`,
+							attrs: { color: "6" },
+						});
+
+						edges.push({
+							from: lastStepId,
+							to: choiceNodeId,
+							type: "choice",
+							label: option,
+						});
+					});
+				}
+			}
+		});
+
 		// Add assumptions for default behaviors
 		if (plan.steps.length === 0) {
 			assumptions.push("No specific steps detected, created default AI workflow");
+		}
+		if (plan.inputs.length === 0 && originalNL.includes("{{")) {
+			assumptions.push("Detected variable references but no explicit inputs defined");
 		}
 
 		return {
@@ -355,6 +474,7 @@ interface WorkflowStep {
 	description: string;
 	prompt?: string;
 	action?: string;
+	role?: "system" | "user" | "assistant";
 }
 
 interface ConditionalStep {

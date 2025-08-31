@@ -34,3 +34,5 @@ export type {
 	GenerationOptions,
 } from "./nl-generator";
 export { testNLGenerator } from "./nl-generator/test";
+export { exampleWorkflows, runExamples } from "./nl-generator/examples";
+export { generateSampleCanvases } from "./nl-generator/generate-samples";
