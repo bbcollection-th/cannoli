@@ -126,7 +126,7 @@ export class NLParser {
 
 	private extractPrompt(nl: string): string {
 		// Extract quoted text or common prompt patterns
-		const quotedMatch = nl.match(/"([^"]+)"/);
+		const quotedMatch = nl.match(/['"]([^'"]+)['"]/);
 		if (quotedMatch) return quotedMatch[1];
 
 		const promptMatch = nl.match(/prompt[:\s]+([^.]+)/i);
