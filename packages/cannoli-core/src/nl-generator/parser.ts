@@ -71,8 +71,12 @@ export class NLParser {
 		}
 		
 		// Look for AI operations
-		if (nl.includes("ai") || nl.includes("gpt") || nl.includes("chatgpt") || nl.includes("llm") || 
-			nl.includes("ask") || nl.includes("prompt")) {
+		if (
+			/\b(ai|ai-powered|artificial intelligence|llm|llms)\b/i.test(nl) ||
+			/\b(gpt[- ]?\d*|chatgpt)\b/i.test(nl) ||
+			/\b(ask|asking|asked)\b/i.test(nl) ||
+			/\b(prompt|prompted|prompting)\b/i.test(nl)
+		) {
 			steps.push({
 				type: "ai",
 				description: "AI processing step",
