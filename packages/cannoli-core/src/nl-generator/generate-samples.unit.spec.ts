@@ -45,11 +45,10 @@ describe("generateSampleCanvases", () => {
     spy.spyOn(console, "log").mockImplementation(() => {});
 
     // Provide a mock implementation for generateCanvasFromNL
-    const mocked = { generateCanvasFromNL: spy.fn<[], any>() };
-    (jest.mocked?.(await import("./index")) as any)?.generateCanvasFromNL && ((await import("./index")) as any).generateCanvasFromNL;
+    const mocked = { generateCanvasFromNL: spy.fn() };
+    // Enregistrer le mock avant d'importer le SUT
     vi?.doMock?.("./index", () => mocked);
-    jest.doMock?.("./index", () => mocked);
-
+    jest?.doMock?.("./index", () => mocked);
     // Now import the module under test after mocks are in place
     const mod = await import("./generate-samples.test");
     generateSampleCanvases = mod.generateSampleCanvases;
