@@ -138,15 +138,16 @@ export function validateCanvas(canvas: object): ValidationResult {
 		// Validate edge structure
 		const nodeIds = new Set(canvasData.nodes.map(n => n.id));
 		canvasData.edges.forEach((edge, index) => {
-			if (!edge.id) errors.push(`Edge at index ${index} missing required 'id' field`);
+			if (!edge.id)    errors.push(`Edge at index ${index} missing required 'id' field`);
 			if (!edge.fromNode) errors.push(`Edge at index ${index} missing required 'fromNode' field`);
-			if (!edge.toNode) errors.push(`Edge at index ${index} missing required 'toNode' field`);
+			if (!edge.toNode)   errors.push(`Edge at index ${index} missing required 'toNode' field`);
 			
-			if (!nodeIds.has(edge.fromNode)) {
-				errors.push(`Edge ${edge.id} references non-existent fromNode: ${edge.fromNode}`);
+			const edgeLabel = edge.id ? `Edge ${edge.id}` : `Edge at index ${index}`;
+			if (edge.fromNode && !nodeIds.has(edge.fromNode)) {
+				errors.push(`${edgeLabel} references non-existent fromNode: ${edge.fromNode}`);
 			}
-			if (!nodeIds.has(edge.toNode)) {
-				errors.push(`Edge ${edge.id} references non-existent toNode: ${edge.toNode}`);
+			if (edge.toNode && !nodeIds.has(edge.toNode)) {
+				errors.push(`${edgeLabel} references non-existent toNode: ${edge.toNode}`);
 			}
 		});
 
