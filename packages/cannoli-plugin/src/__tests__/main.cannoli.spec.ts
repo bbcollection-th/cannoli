@@ -179,7 +179,7 @@ describe("Geometry helpers", () => {
     expect((plugin as any).overlaps(a, c)).toBe(false);
   });
 
-  it("overlaps est false quand les rectangles ne font que se toucher", () => {
+  it("overlaps is false when rectangles only touch", () => {
     const a = (plugin as any).createRectangle(0, 0, 10, 10);
     const b = (plugin as any).createRectangle(10, 0, 5, 5); // touche à droite
     expect((plugin as any).overlaps(a, b)).toBe(false);
