@@ -35,8 +35,7 @@ import {
   cannoliIntentEdgeSchema,
   cannoliIntentLayoutSchema,
   cannoliIntentSchema,
-} from "../types.test";
-
+} from "../types";
 describe("cannoliIntentMetaSchema", () => {
   it("parses minimal valid meta and applies defaults inside defaults object", () => {
     const parsed = cannoliIntentMetaSchema.parse({
