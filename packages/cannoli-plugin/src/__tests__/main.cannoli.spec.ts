@@ -112,7 +112,6 @@ import { DEFAULT_SETTINGS as REAL_DEFAULTS } from "../settings/settings";
     contentIsColorless: false,
     chatFormatString: REAL_DEFAULTS.chatFormatString,
     enableVision: false,
-  };
     tracingConfig: undefined,
     // LLM provider and keys
     llmProvider: "openai",

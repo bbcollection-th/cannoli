@@ -46,10 +46,8 @@ private extractSemanticPlan(nl: string): SemanticPlan {
     };
 
     // …rest of method…
+    return plan;
 }
-
-		return plan;
-	}
 
 	private extractObjective(nl: string): string {
 		// Extract main objective
@@ -456,7 +454,7 @@ private extractSemanticPlan(nl: string): SemanticPlan {
 			},
 			nodes,
 			edges,
-			layout: { strategy: "dag" },
+			layout: { strategy: "dag", laneHints: [] },
 		};
 	}
 }

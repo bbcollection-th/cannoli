@@ -18,10 +18,7 @@ export async function generateSampleCanvases(): Promise<void> {
 	console.log("🎨 Generating Sample Canvas Files\n");
 
 	// Create output directory
-import { writeFileSync, mkdirSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
-
+	const { tmpdir } = require("os");
 	const outputDir = join(tmpdir(), "sample-cannoli-canvases");
 	try {
 		mkdirSync(outputDir, { recursive: true });

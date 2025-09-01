@@ -61,7 +61,7 @@ export class CanvasCompiler {
 		const width = node.attrs?.width ?? 250;
 		const height = node.attrs?.height ?? 60;
 		// default to "auto" color if not provided
-		const colorAuto = node.attrs?.color ?? "auto";
+		const color = node.attrs?.color ?? "auto";
 
 		const baseNode = {
 			id,
@@ -80,18 +80,9 @@ export class CanvasCompiler {
 					// AI nodes are colorless by default (Cannoli recognizes them)
 				};
 
-private compileNode(node: CannoliIntentNode, id: string): AllCanvasNodeData | null {
-    const width = node.attrs?.width ?? 250;
-    const height = node.attrs?.height ?? 60;
-    // default to "auto" color if not provided
-    const color = node.attrs?.color ?? "auto";
-
-    // … (other initialization and baseNode construction) …
-
-    switch (node.kind) {
-      case "content":
-        return {
-          ...baseNode,
+			case "content":
+				return {
+					...baseNode,
           type: "text",
           text: node.text || "",
           color: color === "auto" ? "6" : color, // Purple for content
@@ -121,9 +112,6 @@ private compileNode(node: CannoliIntentNode, id: string): AllCanvasNodeData | nu
           color: color === "auto" ? "6" : color,
         };
 
-      // … (other cases, if any) …
-    }
-}
 			case "floating":
 				return {
 					...baseNode,
@@ -161,10 +149,10 @@ private compileNode(node: CannoliIntentNode, id: string): AllCanvasNodeData | nu
 				return groupNode;
 			}
 
-			default:
-				return null;
-		}
-	}
+      default:
+        return null;
+    }
+}
 
 	/**
 	 * Format action text based on action type
