@@ -14,12 +14,8 @@ describe("NLParser.parseToIntent – core behavior", () => {
     expect(intent.meta.defaults.aiProvider).toBeDefined();
     expect(intent.meta.defaults.model).toBeDefined();
     expect(intent.meta.defaults.temperature).toBeDefined();
-    expect(intent.meta.defaults.enableVision).toBeTypeOf
-      ? expect(intent.meta.defaults.enableVision).toBeTypeOf("boolean")
-      : expect(typeof intent.meta.defaults.enableVision).toBe("boolean");
-    expect(intent.meta.defaults.wrapInCannoliGroup).toBeTypeOf
-      ? expect(intent.meta.defaults.wrapInCannoliGroup).toBeTypeOf("boolean")
-      : expect(typeof intent.meta.defaults.wrapInCannoliGroup).toBe("boolean");
+    expect(typeof intent.meta.defaults.enableVision).toBe("boolean");
+    expect(typeof intent.meta.defaults.wrapInCannoliGroup).toBe("boolean");
   });
 
   it("honors provided GenerationOptions in meta.defaults", () => {
@@ -45,6 +41,8 @@ describe("NLParser.parseToIntent – core behavior", () => {
     const intent = new NLParser().parseToIntent(longText);
     expect(intent.meta.title.startsWith("Generated from: ")).toBe(true);
     expect(intent.meta.title.endsWith("...")).toBe(true);
+    const body = intent.meta.title.replace(/^Generated from: /, "").replace(/\.\.\.$/, "");
+    expect(body.length).toBeLessThanOrEqual(50);
   });
 });
 

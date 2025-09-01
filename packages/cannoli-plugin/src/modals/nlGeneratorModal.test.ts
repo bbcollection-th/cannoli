@@ -101,8 +101,7 @@ vi.mock("@deablabs/cannoli-core", () => ({
 }));
 
 // Import mocks' types after vi.mock for TypeScript awareness
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Notice } = require("obsidian");
+import { Notice } from "obsidian";
 
 function flushTimers() {
   return new Promise<void>((res) => {
@@ -172,6 +171,17 @@ describe("NLGeneratorModal", () => {
 
     await (modal as any).handleGenerate();
 
+    expect(Notice.lastMessages.at(-1)).toMatch(/Please enter a description/);
+    expect(mockGenerate).not.toHaveBeenCalled();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("affiche un avis si l'entrée ne contient que des espaces", async () => {
+    const modal = new NLGeneratorModal({} as any, onSubmit);
+    (modal as any).onOpen();
+    await flushTimers();
+    (modal as any).textArea.setValue("   \n\t  ");
+    await (modal as any).handleGenerate();
     expect(Notice.lastMessages.at(-1)).toMatch(/Please enter a description/);
     expect(mockGenerate).not.toHaveBeenCalled();
     expect(onSubmit).not.toHaveBeenCalled();

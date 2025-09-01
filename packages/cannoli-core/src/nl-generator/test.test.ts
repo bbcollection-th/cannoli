@@ -36,19 +36,12 @@ type TestFns = {
   mocker: any; // vi or jest
 };
 const t: TestFns = (() => {
-  if (usingVitest) {
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { describe, it, test, expect, beforeEach, afterEach, vi } = require('vitest');
-    return { describe, it, test, expect, beforeEach, afterEach, mocker: vi };
+  const g: any = globalThis as any;
+  if (usingVitest && g.describe && g.it && g.expect && g.vi) {
+    return { describe: g.describe, it: g.it, test: g.it, expect: g.expect, beforeEach: g.beforeEach, afterEach: g.afterEach, mocker: g.vi };
   }
-  if (usingJest) {
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { describe, test, expect, beforeEach, afterEach, jest: jestObj } = require('@jest/globals');
-    // Shim "it" to "test"
-    const itShim = test;
-    return { describe, it: itShim, test, expect, beforeEach, afterEach, mocker: jestObj };
+  if (usingJest && g.describe && g.test && g.expect && g.jest) {
+    return { describe: g.describe, it: g.test, test: g.test, expect: g.expect, beforeEach: g.beforeEach, afterEach: g.afterEach, mocker: g.jest };
   }
   throw new Error("No supported test runner detected (Vitest or Jest).");
 })();
