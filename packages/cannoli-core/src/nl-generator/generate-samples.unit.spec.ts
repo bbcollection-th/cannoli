@@ -50,9 +50,8 @@ describe("generateSampleCanvases", () => {
     vi?.doMock?.("./index", () => mocked);
     jest?.doMock?.("./index", () => mocked);
     // Now import the module under test after mocks are in place
-    const mod = await import("./generate-samples.test");
+    const mod = await import("./generate-samples");
     generateSampleCanvases = mod.generateSampleCanvases;
-
     // Capture the mocked function reference (works for both Jest/Vitest)
     const idx = await import("./index") as any;
     generateCanvasFromNL = idx.generateCanvasFromNL as any;
