@@ -92,7 +92,26 @@ export async function runExamples(): Promise<void> {
 }
 
 /**
- * Analyze canvas features for verification
+ * Derives a human-readable list of structural features present on a canvas.
+ *
+ * The function inspects `canvas.nodes` and `canvas.edges` and returns feature strings
+ * such as `"2 AI nodes"`, `"Cannoli group"`, `"3 Basic edges"`, etc.
+ *
+ * Expected canvas shape:
+ * - nodes: array of objects where relevant properties are:
+ *   - `type` (e.g., `"text"`, `"group"`)
+ *   - `color` (string or falsy)
+ *   - `label` (string, for group detection)
+ * - edges: array of objects where relevant properties are:
+ *   - `color` (string or falsy)
+ *   - `label` (string or falsy)
+ *
+ * Special return values:
+ * - `["Invalid canvas"]` if `canvas.nodes` or `canvas.edges` is missing.
+ * - `["Basic structure"]` when no specific features are detected.
+ *
+ * @param canvas - Canvas object to analyze (expects `nodes` and `edges` arrays with the properties described above).
+ * @returns An array of human-readable feature descriptions found on the canvas.
  */
 function analyzeCanvasFeatures(canvas: any): string[] {
 	const features: string[] = [];
