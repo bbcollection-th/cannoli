@@ -49,7 +49,16 @@ export const exampleWorkflows = [
 ];
 
 /**
- * Run example workflows and log results
+ * Execute the exported example NL-to-Cannoli workflows and print compact run results to the console.
+ *
+ * Iterates over `exampleWorkflows`, generates a canvas for each using `generateCanvasFromNL` (with
+ * `wrapInCannoliGroup: true`), and logs the input, expected features, generation outcome, a
+ * human-readable feature summary produced by `analyzeCanvasFeatures`, and any assumptions or
+ * warnings from the generator. If the generator returns unanswered questions for a workflow, that
+ * workflow is skipped. Errors for individual examples are caught and logged; processing continues
+ * with the next example.
+ *
+ * Side effects: writes progress and results to the console.
  */
 export async function runExamples(): Promise<void> {
 	console.log("🧪 Running Example Workflows\n");

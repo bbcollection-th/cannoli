@@ -85,19 +85,25 @@ export async function generateCanvasFromNL(
 }
 
 /**
- * Validate the structure and basic integrity of a Cannoli canvas.
+ * Validate a Cannoli canvas's top-level shape, each node, and each edge.
  *
- * Performs sanity checks on the top-level shape, each node, and each edge, and
- * applies a few Cannoli-specific heuristics (presence of AI/content/action text
- * nodes and a top-level "cannoli" group) to surface warnings.
+ * Performs defensive checks on the provided object (expected to be CanvasData)
+ * and returns arrays of fatal structural errors and non-fatal warnings.
  *
- * @param canvas - The canvas object to validate (expected to conform to CanvasData:
- *   { nodes: array, edges: array }), but the function will defensively check shape.
- * @returns An object with two arrays:
- *   - `errors`: fatal structural problems that make the canvas invalid (missing arrays,
- *     missing required fields, or references to non-existent nodes).
- *   - `warnings`: non-fatal issues or recommendations (e.g., no recognized Cannoli nodes
- *     or missing `cannoli` group).
+ * Checks performed:
+ * - Top-level presence and array-ness of `nodes` and `edges`.
+ * - Per-node required fields: `id`, `type`, numeric `x`, `y`, `width`, `height`.
+ * - Per-edge required fields: `id`, `fromNode`, `toNode` and that referenced node IDs exist.
+ * - Cannoli-specific heuristics: presence of AI/content/action text nodes (by type/color)
+ *   and a top-level group labeled `"cannoli"` (case-insensitive).
+ *
+ * The function never throws; on unexpected internal errors it records a validation
+ * failure message into the returned `errors` array.
+ *
+ * @param canvas - Object to validate (should conform to CanvasData: { nodes: [], edges: [] }); validated defensively.
+ * @returns An object with:
+ *  - `errors`: fatal problems that make the canvas invalid (structural issues, missing required fields, invalid references).
+ *  - `warnings`: non-fatal recommendations (e.g., no recognizable Cannoli nodes or missing `cannoli` group).
  */
 export function validateCanvas(canvas: object): ValidationResult {
 	const errors: string[] = [];
