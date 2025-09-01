@@ -246,27 +246,29 @@ export function explainCanvas(canvas: object): string {
 		if (nodeTypes.link > 0) parts.push(`${nodeTypes.link} link node(s)`);
 
 		// Analyze edge types
-		const edgeTypes = new Map<string, number>();
+		const edgeTypes: Record<string, number> = {};
 		canvasData.edges.forEach(edge => {
+			let key: string;
 			if (edge.color === "2") {
-				edgeTypes.set(edge.label ? "config" : "logging", (edgeTypes.get(edge.label ? "config" : "logging") || 0) + 1);
+				key = edge.label ? "config" : "logging";
 			} else if (edge.color === "3") {
-				edgeTypes.set("choice", (edgeTypes.get("choice") || 0) + 1);
+				key = "choice";
 			} else if (edge.color === "4") {
-				edgeTypes.set("chat", (edgeTypes.get("chat") || 0) + 1);
+				key = "chat";
 			} else if (edge.color === "5") {
-				edgeTypes.set("list", (edgeTypes.get("list") || 0) + 1);
+				key = "list";
 			} else if (edge.color === "6") {
-				edgeTypes.set("field", (edgeTypes.get("field") || 0) + 1);
+				key = "field";
 			} else if (edge.label && /{{[^}]+}}/.test(edge.label) && !edge.color) {
-				edgeTypes.set("variable", (edgeTypes.get("variable") || 0) + 1);
+				key = "variable";
 			} else {
-				edgeTypes.set("basic", (edgeTypes.get("basic") || 0) + 1);
+				key = "basic";
 			}
+			edgeTypes[key] = (edgeTypes[key] || 0) + 1;
 		});
 
-		if (edgeTypes.size > 0) {
-			parts.push("Edge types: " + Array.from(edgeTypes.entries()).map(([type, count]) => `${count} ${type}`).join(", "));
+		if (Object.keys(edgeTypes).length > 0) {
+			parts.push("Edge types: " + Object.entries(edgeTypes).map(([type, count]) => `${count} ${type}`).join(", "));
 		}
 
 		// Check for special features
@@ -303,7 +305,7 @@ export function explainCanvas(canvas: object): string {
  */
 export function refineWithAnswers(
 	canvasOrIR: object, 
-	answers: Record<string, string>
+	_answers: Record<string, string>
 ): GenerationResult {
 	// For this basic implementation, we'll return the original canvas
 	// In a more advanced version, this would re-process based on answers
