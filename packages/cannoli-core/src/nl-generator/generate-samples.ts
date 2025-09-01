@@ -23,7 +23,7 @@ export async function generateSampleCanvases(): Promise<void> {
 	try {
 		mkdirSync(outputDir, { recursive: true });
 	} catch (error) {
-		console.log(`   ⚠️  Impossible de créer ${outputDir}: ${error instanceof Error ? error.message : String(error)}`);
+		console.log(`   ⚠️  Unable to create ${outputDir}: ${error instanceof Error ? error.message : String(error)}`);
 	}
 
 	const examples = [
