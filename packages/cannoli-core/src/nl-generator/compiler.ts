@@ -80,38 +80,50 @@ export class CanvasCompiler {
 					// AI nodes are colorless by default (Cannoli recognizes them)
 				};
 
-			case "content":
-				return {
-					...baseNode,
-					type: "text",
-					text: node.text || "",
-					color: node.attrs.color === "auto" ? "6" : node.attrs.color, // Purple for content
-				};
+private compileNode(node: CannoliIntentNode, id: string): AllCanvasNodeData | null {
+    const width = node.attrs?.width ?? 250;
+    const height = node.attrs?.height ?? 60;
+    // default to "auto" color if not provided
+    const color = node.attrs?.color ?? "auto";
 
-			case "action":
-				return {
-					...baseNode,
-					type: "text",
-					text: this.formatActionText(node),
-					color: node.attrs.color === "auto" ? "2" : node.attrs.color, // Orange for actions
-				};
+    // … (other initialization and baseNode construction) …
 
-			case "formatter":
-				return {
-					...baseNode,
-					type: "text",
-					text: `"${node.text || ""}"`, // Single quotes for formatters
-					color: node.attrs?.color === "auto" ? "6" : node.attrs?.color,
-				};
+    switch (node.kind) {
+      case "content":
+        return {
+          ...baseNode,
+          type: "text",
+          text: node.text || "",
+          color: color === "auto" ? "6" : color, // Purple for content
+        };
 
-			case "reference":
-				return {
-					...baseNode,
-					type: "text",
-					text: `{{${node.text || "[[Note]]"}}}`, // Reference format
-					color: node.attrs.color === "auto" ? "6" : node.attrs.color,
-				};
+      case "action":
+        return {
+          ...baseNode,
+          type: "text",
+          text: this.formatActionText(node),
+          color: color === "auto" ? "2" : color, // Orange for actions
+        };
 
+      case "formatter":
+        return {
+          ...baseNode,
+          type: "text",
+          text: `"${node.text || ""}"`, // Double quotes for formatters
+          color: color === "auto" ? "6" : color,
+        };
+
+      case "reference":
+        return {
+          ...baseNode,
+          type: "text",
+          text: `{{${node.text || "[[Note]]"}}}`, // Reference format
+          color: color === "auto" ? "6" : color,
+        };
+
+      // … (other cases, if any) …
+    }
+}
 			case "floating":
 				return {
 					...baseNode,
