@@ -46,11 +46,33 @@ vi.mock("./types", async () => {
   };
 });
 
+// Declare variables to hold your mock implementations
+let NLParserMock: ReturnType<typeof vi.fn>;
+let CanvasCompilerMock: ReturnType<typeof vi.fn>;
+
+vi.mock("./parser", () => {
+  // Assign into the captured variable instead of using vi.importedModules
+  NLParserMock = vi.fn().mockImplementation((_opts?: any) => ({
+    parseToIntent: vi.fn(),
+  }));
+  return { NLParser: NLParserMock };
+});
+
+vi.mock("./compiler", () => {
+  // Likewise for the compiler mock
+  CanvasCompilerMock = vi.fn().mockImplementation(() => ({
+    validateIR: vi.fn(),
+    compileToCanvas: vi.fn(),
+  }));
+  return { CanvasCompiler: CanvasCompilerMock };
+});
+
 function getMocks() {
-  // Pull class constructors and prototype methods from mocks
-  const { NLParser } = vi.importedModules["./parser"] as any;
-  const { CanvasCompiler } = vi.importedModules["./compiler"] as any;
-  return { NLParser, CanvasCompiler };
+  // Return the captured mock constructors directly
+  return {
+    NLParser: NLParserMock,
+    CanvasCompiler: CanvasCompilerMock,
+  };
 }
 
 describe("nl-generator index API", () => {
