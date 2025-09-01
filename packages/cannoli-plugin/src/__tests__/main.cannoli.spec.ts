@@ -101,14 +101,18 @@ function makeMockApp(overrides: Partial<any> = {}) {
 function makePlugin(overrides: Partial<any> = {}) {
   const { app, files, binary, fileObjs, folders, mkTFile } = makeMockApp();
   // Default settings baseline resembling DEFAULT_SETTINGS shape
+import Cannoli from "../main";
+import { DEFAULT_SETTINGS as REAL_DEFAULTS } from "../settings/settings";
+
   const DEFAULT_SETTINGS = {
     seenVersion2Modal: true,
     enableAudioTriggeredCannolis: false,
     deleteAudioFilesAfterAudioTriggeredCannolis: false,
     httpTemplates: [],
     contentIsColorless: false,
-    chatFormatString: "default",
+    chatFormatString: REAL_DEFAULTS.chatFormatString,
     enableVision: false,
+  };
     tracingConfig: undefined,
     // LLM provider and keys
     llmProvider: "openai",
