@@ -439,7 +439,7 @@ export class CanvasCompiler {
 				.map(b => b.toString(16).padStart(2, '0'))
 				.join('');
 		} else {
-			// Fallback pour les environnements sans crypto
+			// Fallback for environments without crypto
 			const chars = "0123456789abcdef";
 			let result = "";
 			for (let i = 0; i < 16; i++) {
