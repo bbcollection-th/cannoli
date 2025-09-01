@@ -1,6 +1,17 @@
 import { generateCanvasFromNL, validateCanvas, explainCanvas } from "./index";
 
-// Simple inline test function for development purposes
+/**
+ * Development-only inline test that generates, validates, and inspects a canvas from a short natural-language prompt.
+ *
+ * Runs a simple scenario using a sample prompt to:
+ * - call generateCanvasFromNL,
+ * - surface any assumptions, warnings, or questions (returns early if questions are present),
+ * - validate the generated canvas with validateCanvas,
+ * - obtain a human-readable explanation with explainCanvas,
+ * - perform basic structural checks (presence of nodes/edges, detection of a "cannoli" group, and simple node-type counts).
+ *
+ * This function is intended for manual or dev-time use and has observable side effects (console logging of progress, results, warnings, and errors).
+ */
 export async function testNLGenerator(): Promise<void> {
 	console.log("Testing NL to Cannoli Generator...\n");
 	
