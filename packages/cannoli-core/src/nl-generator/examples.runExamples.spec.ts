@@ -9,7 +9,24 @@ Note on test runner:
 type AnyFn = (...args: any[]) => any;
 const j = (globalThis as any).jest ?? (globalThis as any).vi;
 
-import * as ExamplesModule from "./examples.test";
+// ← other imports & jest.mock calls
+// L’import du SUT sera fait dynamiquement en amont des tests, après enregistrement des mocks.
+let ExamplesModule: typeof import("./examples");
+
+describe("runExamples", () => {
+  beforeAll(async () => {
+    // Charger le SUT après enregistrement des mocks pour garantir que le mock de ./index soit actif
+    ExamplesModule = await import("./examples");
+    // Spy on console.log once for the whole suite
+    jest.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  // …rest of your tests, e.g.:
+  it("should run examples without errors", async () => {
+    await ExamplesModule.runExamples();
+    // assertions…
+  });
+});
 
 jestOrViMock("./index");
 
