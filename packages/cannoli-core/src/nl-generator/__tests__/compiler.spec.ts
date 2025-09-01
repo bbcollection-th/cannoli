@@ -4,7 +4,8 @@ Test framework:
 - If this repo uses Vitest, add: import { describe, it, expect, vi } from "vitest";
 - If Jest, globals are available; swap vi.fn with jest.fn as needed.
 */
-import { CanvasCompiler } from "../compiler.test"; // Source file currently exports CanvasCompiler
+// packages/cannoli-core/src/nl-generator/__tests__/compiler.spec.ts
+import { CanvasCompiler } from "../compiler";
 // If types are available, import them; otherwise define minimal shapes used in tests.
 type CanvasNodeBase = { id: string; x: number; y: number; width: number; height: number; };
 type CanvasTextNode = CanvasNodeBase & { type: "text"; text: string; color?: string };
