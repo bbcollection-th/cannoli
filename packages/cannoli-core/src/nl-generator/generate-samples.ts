@@ -3,7 +3,26 @@ import { writeFileSync, mkdirSync } from "fs";
 import { join } from "path";
 
 /**
- * Generate sample canvas files for demonstration
+ * Generate and save example canvases from natural-language prompts.
+ *
+ * Creates a temporary output directory (/tmp/sample-cannoli-canvases) and, for each built-in example prompt,
+ * converts the prompt to a canvas using `generateCanvasFromNL`, augments the canvas with metadata
+ * (version, generatedBy, originalInput, generatedAt), and writes the result as a pretty-printed JSON file.
+ *
+ * Side effects:
+ * - Ensures the output directory exists (creates it if necessary).
+ * - Writes one .canvas JSON file per successful example to the output directory.
+ * - Logs progress, skipped examples (when the generator reports unresolved questions), and any per-example errors.
+ *
+ * Saved canvas metadata fields:
+ * - version: "1.0-1.0"
+ * - generatedBy: "Cannoli NL Generator"
+ * - originalInput: the natural-language prompt used to generate the canvas
+ * - generatedAt: ISO timestamp when the file was produced
+ *
+ * The function returns after all examples have been processed.
+ *
+ * @returns A promise that resolves when all sample canvases have been processed and saved.
  */
 export async function generateSampleCanvases(): Promise<void> {
 	console.log("🎨 Generating Sample Canvas Files\n");

@@ -14,7 +14,19 @@ import {
  */
 
 /**
- * Generate a Cannoli canvas from natural language description
+ * Generate a Cannoli canvas from a natural-language specification.
+ *
+ * Parses the provided natural-language `spec` into a Cannoli intermediate representation (IR),
+ * validates that IR, and, if valid, compiles it to a Canvas. Validation failures or runtime
+ * errors produce a result with an empty canvas and diagnostic questions describing the problem.
+ *
+ * @param spec - Natural-language description of the desired Cannoli canvas.
+ * @param options - Generation options. If `options.includeIR` is true the returned result will
+ *   include the parsed IR under the `ir` property when available.
+ * @returns A GenerationResult containing:
+ *   - `canvas`: the compiled canvas (or an empty canvas on failure),
+ *   - `report`: assumptions, warnings, and diagnostic questions,
+ *   - `ir` (optional): the parsed intermediate representation when `options.includeIR` is true.
  */
 export async function generateCanvasFromNL(
 	spec: string, 
@@ -66,7 +78,17 @@ export async function generateCanvasFromNL(
 }
 
 /**
- * Validate a Cannoli canvas
+ * Validate the structure and Cannoli-specific integrity of a canvas object.
+ *
+ * Performs basic schema checks (presence of nodes and edges arrays, required
+ * fields on nodes and edges, numeric coordinates and sizes, and that edges
+ * reference existing nodes) and produces human-readable errors and warnings.
+ * Warnings include missing Cannoli node types (AI/content/action) and absence
+ * of a top-level "cannoli" group. Any unexpected exception during validation
+ * is captured and returned as an error message.
+ *
+ * @param canvas - The canvas object to validate (expected shape: CanvasData).
+ * @returns An object with `errors` (validation failures) and `warnings` (non-fatal issues).
  */
 export function validateCanvas(canvas: object): ValidationResult {
 	const errors: string[] = [];
@@ -146,7 +168,16 @@ export function validateCanvas(canvas: object): ValidationResult {
 }
 
 /**
- * Explain a canvas in natural language
+ * Produce a concise natural-language summary of a canvas.
+ *
+ * The function inspects the canvas's nodes and edges (expected shape: CanvasData with `nodes` and `edges`)
+ * and returns a human-readable sentence describing counts of nodes and edges, a breakdown of recognized
+ * node categories (AI, content, action, group, file, link), a summary of edge types (e.g., config, logging,
+ * choice, chat, list, field, variable, basic), and a note if the canvas contains a top-level "cannoli" group.
+ * The returned string always ends with a period. On failure, a short error message is returned.
+ *
+ * @param canvas - The canvas object to summarize; should include `nodes` and `edges`.
+ * @returns A single-line natural-language explanation of the canvas or an error message on failure.
  */
 export function explainCanvas(canvas: object): string {
 	try {
@@ -238,7 +269,19 @@ export function explainCanvas(canvas: object): string {
 }
 
 /**
- * Refine canvas or IR with user answers to clarification questions
+ * Refines a Cannoli canvas or intermediate representation (IR) using user-provided answers.
+ *
+ * If `canvasOrIR` parses as a Cannoli IR, the function validates the IR and:
+ * - If validation fails, returns an empty canvas, includes the IR in the result, and emits a diagnostic question describing the validation errors.
+ * - If validation succeeds, compiles the IR to a canvas, returns that canvas, includes the IR, and reports any IR warnings plus a placeholder assumption indicating refinement is not yet implemented.
+ *
+ * If `canvasOrIR` is not a Cannoli IR, the function returns the original value cast as CanvasData with a placeholder report (`"Refinement not yet implemented in basic version"`).
+ *
+ * This implementation is a basic placeholder: answers are accepted but not applied to alter the IR or canvas.
+ *
+ * @param canvasOrIR - Either a Cannoli intermediate representation (IR) object or an existing canvas object.
+ * @param answers - Mapping of question IDs to user-provided answers used for refinement (currently accepted but not applied).
+ * @returns A GenerationResult containing the resulting canvas, a report with assumptions/warnings/questions, and the IR when the input parsed as a valid Cannoli IR.
  */
 export function refineWithAnswers(
 	canvasOrIR: object, 

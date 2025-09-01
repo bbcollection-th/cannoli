@@ -92,7 +92,20 @@ export async function runExamples(): Promise<void> {
 }
 
 /**
- * Analyze canvas features for verification
+ * Produce human-readable feature descriptors from a canvas object.
+ *
+ * Given a canvas-like object with `nodes` and `edges` arrays, inspects node and edge
+ * properties to summarize detected elements (e.g., AI/content/action nodes, group
+ * named "cannoli", basic/variable/config/choice/field edges).
+ *
+ * If `canvas.nodes` or `canvas.edges` is missing, returns `["Invalid canvas"]`.
+ * If no specific features are found, returns `["Basic structure"]`.
+ *
+ * @param canvas - Canvas-shaped object expected to contain `nodes: any[]` and `edges: any[]`.
+ *                 Nodes are inspected for `type`, `color`, and `label` (label checked
+ *                 case-insensitively where relevant). Edges are inspected for `color`
+ *                 and `label`.
+ * @returns An array of short, human-readable feature descriptors.
  */
 function analyzeCanvasFeatures(canvas: any): string[] {
 	const features: string[] = [];
