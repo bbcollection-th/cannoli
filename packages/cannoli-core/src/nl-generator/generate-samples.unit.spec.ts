@@ -12,8 +12,12 @@ import * as path from "path";
 
 // Mock the module that provides generateCanvasFromNL
 // The target file imports from "./index"
-jest.mock?.("./index");
-vi?.mock?.("./index");
+if (typeof jest !== "undefined" && typeof jest.mock === "function") {
+  jest.mock("./index");
+}
+if (typeof vi !== "undefined" && typeof vi.mock === "function") {
+  vi.mock("./index");
+}
 
 type Canvas = { nodes?: any[]; edges?: any[]; [k: string]: any };
 type GenReport = { questions: string[]; assumptions: string[] };
