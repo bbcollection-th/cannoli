@@ -30,7 +30,7 @@ export const cannoliIntentIOSchema = z.object({
 });
 
 export const cannoliIntentNodeSchema = z.object({
-	id: z.string().regex(/^[0-9a-f]{16}$/i, "ID attendu: 16 hex").optional(),
+	id: z.string().regex(/^[0-9a-f]{16}$/i, "Expected ID: 16 hex characters").optional(),
 	kind: z.enum([
 		"ai",
 		"content",
