@@ -93,7 +93,7 @@ export const cannoliIntentLayoutSchema = z.object({
 	laneHints: z.array(z.object({
 		id: z.string(),
 		lane: z.enum(["source", "process", "sink"]),
-	})).default([]).optional(),
+	})).optional().default([]),
 });
 
 export const cannoliIntentSchema = z.object({
