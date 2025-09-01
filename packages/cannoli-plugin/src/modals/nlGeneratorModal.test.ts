@@ -176,7 +176,7 @@ describe("NLGeneratorModal", () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it("affiche un avis si l'entrée ne contient que des espaces", async () => {
+  it("shows notice if the input contains only spaces", async () => {
     const modal = new NLGeneratorModal({} as any, onSubmit);
     (modal as any).onOpen();
     await flushTimers();
