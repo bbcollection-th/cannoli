@@ -14,7 +14,26 @@ import {
  */
 
 /**
- * Generate a Cannoli canvas from natural language description
+ * Generate a Cannoli canvas from a natural-language description.
+ *
+ * Parses the provided natural-language `spec` into a Cannoli intermediate representation (IR),
+ * validates the IR, and — if valid — compiles it into a Cannoli canvas.
+ *
+ * On success the returned GenerationResult contains:
+ * - `canvas`: the compiled canvas,
+ * - `report.assumptions`: any assumptions from `ir.meta?.assumptions`,
+ * - `report.warnings`: any validation warnings,
+ * - `report.questions`: an empty array,
+ * - `ir` (optional): included when `options.includeIR` is truthy.
+ *
+ * If IR validation fails the result contains an empty canvas and a `report.questions`
+ * entry describing the validation errors; `ir` is included only if `options.includeIR`
+ * is truthy. If an unexpected error is thrown during generation the result contains an
+ * empty canvas and a `report.questions` entry with the error message.
+ *
+ * @param spec - Natural-language description of the desired Cannoli workflow.
+ * @param options - Generation options; set `includeIR: true` to include the parsed IR in the result.
+ * @returns A Promise resolving to a GenerationResult summarizing the generated canvas, report, and optional IR.
  */
 export async function generateCanvasFromNL(
 	spec: string, 
@@ -37,6 +56,7 @@ export async function generateCanvasFromNL(
 					warnings: validation.warnings,
 					questions: [`Generation failed with errors: ${validation.errors.join(", ")}`],
 				},
+				ir: options.includeIR ? ir : undefined,
 			};
 		}
 
@@ -46,7 +66,7 @@ export async function generateCanvasFromNL(
 		return {
 			canvas,
 			report: {
-				assumptions: ir.meta.assumptions,
+				assumptions: ir.meta?.assumptions ?? [],
 				warnings: validation.warnings,
 				questions: [],
 			},
@@ -65,7 +85,25 @@ export async function generateCanvasFromNL(
 }
 
 /**
- * Validate a Cannoli canvas
+ * Validate a Cannoli canvas's top-level shape, each node, and each edge.
+ *
+ * Performs defensive checks on the provided object (expected to be CanvasData)
+ * and returns arrays of fatal structural errors and non-fatal warnings.
+ *
+ * Checks performed:
+ * - Top-level presence and array-ness of `nodes` and `edges`.
+ * - Per-node required fields: `id`, `type`, numeric `x`, `y`, `width`, `height`.
+ * - Per-edge required fields: `id`, `fromNode`, `toNode` and that referenced node IDs exist.
+ * - Cannoli-specific heuristics: presence of AI/content/action text nodes (by type/color)
+ *   and a top-level group labeled `"cannoli"` (case-insensitive).
+ *
+ * The function never throws; on unexpected internal errors it records a validation
+ * failure message into the returned `errors` array.
+ *
+ * @param canvas - Object to validate (should conform to CanvasData: { nodes: [], edges: [] }); validated defensively.
+ * @returns An object with:
+ *  - `errors`: fatal problems that make the canvas invalid (structural issues, missing required fields, invalid references).
+ *  - `warnings`: non-fatal recommendations (e.g., no recognizable Cannoli nodes or missing `cannoli` group).
  */
 export function validateCanvas(canvas: object): ValidationResult {
 	const errors: string[] = [];
@@ -128,8 +166,10 @@ export function validateCanvas(canvas: object): ValidationResult {
 		}
 
 		// Check for cannoli group
-		const cannoliGroups = canvasData.nodes.filter(n => 
-			n.type === "group" && (n as any).label === "cannoli"
+		const cannoliGroups = canvasData.nodes.filter(n =>
+			n.type === "group" &&
+			typeof (n as any).label === "string" &&
+			(n as any).label.toLowerCase() === "cannoli"
 		);
 		if (cannoliGroups.length === 0) {
 			warnings.push("Canvas does not contain a 'cannoli' group. Consider wrapping your workflow in a cannoli group to prevent accidental execution.");
@@ -143,7 +183,18 @@ export function validateCanvas(canvas: object): ValidationResult {
 }
 
 /**
- * Explain a canvas in natural language
+ * Produces a concise natural-language summary of a canvas' structure.
+ *
+ * Inspects nodes and edges to count and classify common Cannoli node types
+ * (AI/content/action/group/file/link) and common edge types (config/logging,
+ * choice, chat, list, field, variable, basic). Also detects a group labeled
+ * "cannoli" (case-insensitive) and notes it as a wrapper for controlled
+ * execution.
+ *
+ * @param canvas - The canvas object (expected to conform to CanvasData) to summarize.
+ * @returns A human-readable summary string describing node/edge counts and notable features.
+ *          If an error occurs while processing, returns a string beginning with
+ *          "Could not explain canvas: " followed by the error message.
  */
 export function explainCanvas(canvas: object): string {
 	try {
@@ -205,7 +256,7 @@ export function explainCanvas(canvas: object): string {
 				edgeTypes.set("list", (edgeTypes.get("list") || 0) + 1);
 			} else if (edge.color === "6") {
 				edgeTypes.set("field", (edgeTypes.get("field") || 0) + 1);
-			} else if (edge.label && !edge.color) {
+			} else if (edge.label && /{{[^}]+}}/.test(edge.label) && !edge.color) {
 				edgeTypes.set("variable", (edgeTypes.get("variable") || 0) + 1);
 			} else {
 				edgeTypes.set("basic", (edgeTypes.get("basic") || 0) + 1);
@@ -217,14 +268,17 @@ export function explainCanvas(canvas: object): string {
 		}
 
 		// Check for special features
-		const cannoliGroups = canvasData.nodes.filter(n => 
-			n.type === "group" && (n as any).label === "cannoli"
+		const cannoliGroups = canvasData.nodes.filter(n =>
+			n.type === "group" &&
+			typeof (n as any).label === "string" &&
+			(n as any).label.toLowerCase() === "cannoli"
 		);
 		if (cannoliGroups.length > 0) {
 			parts.push("Wrapped in cannoli group for controlled execution.");
 		}
 
-		return parts.join(". ");
+		const out = parts.join(". ");
+		return out.endsWith(".") ? out : out + ".";
 
 	} catch (error) {
 		return `Could not explain canvas: ${error instanceof Error ? error.message : "Unknown error"}`;
@@ -232,7 +286,18 @@ export function explainCanvas(canvas: object): string {
 }
 
 /**
- * Refine canvas or IR with user answers to clarification questions
+ * Refines a Cannoli canvas or intermediate representation (IR) using user-provided answers.
+ *
+ * If `canvasOrIR` is a Cannoli IR, the function validates it and, when valid, compiles it to a canvas
+ * and returns a GenerationResult containing the new canvas and the IR. If the IR is invalid, it
+ * returns an empty canvas and a report with validation errors. If `canvasOrIR` is not a recognized IR,
+ * the function treats it as an existing canvas and returns it unchanged with a report noting that
+ * refinement is not implemented in this basic version.
+ *
+ * @param canvasOrIR - Either a Cannoli intermediate representation (IR) object or an existing canvas object.
+ * @param answers - Mapping of question identifiers to user-provided answers used to refine the IR/canvas.
+ * @returns A GenerationResult containing the resulting canvas, a report (assumptions, warnings, questions),
+ *          and the IR when the input was a parsable Cannoli IR.
  */
 export function refineWithAnswers(
 	canvasOrIR: object, 
@@ -240,8 +305,35 @@ export function refineWithAnswers(
 ): GenerationResult {
 	// For this basic implementation, we'll return the original canvas
 	// In a more advanced version, this would re-process based on answers
+	const maybeIR = cannoliIntentSchema.safeParse(canvasOrIR);
+	if (maybeIR.success) {
+		const ir = maybeIR.data;
+		const compiler = new CanvasCompiler();
+		const validation = compiler.validateIR(ir);
+		if (validation.errors.length > 0) {
+			return {
+				canvas: { nodes: [], edges: [] },
+				report: {
+					assumptions: [],
+					warnings: validation.warnings,
+					questions: [`Refinement received invalid IR: ${validation.errors.join(", ")}`],
+				},
+				ir,
+			};
+		}
+		const canvas = compiler.compileToCanvas(ir);
+		return {
+			canvas,
+			report: {
+				assumptions: ["Refinement not yet implemented in basic version"],
+				warnings: validation.warnings,
+				questions: [],
+			},
+			ir,
+		};
+	}
 	return {
-		canvas: canvasOrIR,
+		canvas: canvasOrIR as CanvasData,
 		report: {
 			assumptions: ["Refinement not yet implemented in basic version"],
 			warnings: [],

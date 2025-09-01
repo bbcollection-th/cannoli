@@ -49,7 +49,16 @@ export const exampleWorkflows = [
 ];
 
 /**
- * Run example workflows and log results
+ * Execute the exported example NL-to-Cannoli workflows and print compact run results to the console.
+ *
+ * Iterates over `exampleWorkflows`, generates a canvas for each using `generateCanvasFromNL` (with
+ * `wrapInCannoliGroup: true`), and logs the input, expected features, generation outcome, a
+ * human-readable feature summary produced by `analyzeCanvasFeatures`, and any assumptions or
+ * warnings from the generator. If the generator returns unanswered questions for a workflow, that
+ * workflow is skipped. Errors for individual examples are caught and logged; processing continues
+ * with the next example.
+ *
+ * Side effects: writes progress and results to the console.
  */
 export async function runExamples(): Promise<void> {
 	console.log("🧪 Running Example Workflows\n");
@@ -92,7 +101,26 @@ export async function runExamples(): Promise<void> {
 }
 
 /**
- * Analyze canvas features for verification
+ * Derives a human-readable list of structural features present on a canvas.
+ *
+ * The function inspects `canvas.nodes` and `canvas.edges` and returns feature strings
+ * such as `"2 AI nodes"`, `"Cannoli group"`, `"3 Basic edges"`, etc.
+ *
+ * Expected canvas shape:
+ * - nodes: array of objects where relevant properties are:
+ *   - `type` (e.g., `"text"`, `"group"`)
+ *   - `color` (string or falsy)
+ *   - `label` (string, for group detection)
+ * - edges: array of objects where relevant properties are:
+ *   - `color` (string or falsy)
+ *   - `label` (string or falsy)
+ *
+ * Special return values:
+ * - `["Invalid canvas"]` if `canvas.nodes` or `canvas.edges` is missing.
+ * - `["Basic structure"]` when no specific features are detected.
+ *
+ * @param canvas - Canvas object to analyze (expects `nodes` and `edges` arrays with the properties described above).
+ * @returns An array of human-readable feature descriptions found on the canvas.
  */
 function analyzeCanvasFeatures(canvas: any): string[] {
 	const features: string[] = [];
@@ -107,7 +135,9 @@ function analyzeCanvasFeatures(canvas: any): string[] {
 		content: canvas.nodes.filter((n: any) => n.type === "text" && n.color === "6").length,
 		action: canvas.nodes.filter((n: any) => n.type === "text" && n.color === "2").length,
 		group: canvas.nodes.filter((n: any) => n.type === "group").length,
-		cannoliGroup: canvas.nodes.filter((n: any) => n.type === "group" && n.label === "cannoli").length,
+		cannoliGroup: canvas.nodes.filter(
+			(n: any) => n.type === "group" && typeof n.label === "string" && n.label.toLowerCase() === "cannoli"
+		).length,
 	};
 	
 	if (nodeTypes.ai > 0) features.push(`${nodeTypes.ai} AI node${nodeTypes.ai > 1 ? "s" : ""}`);

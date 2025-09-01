@@ -58,8 +58,8 @@ export class NLParser {
 		const steps: WorkflowStep[] = [];
 		
 		// Look for system prompts first
-		if (nl.includes("system:") || nl.includes("system prompt")) {
-			const systemMatch = nl.match(/system[:\s]+['""]?([^.'""\n]+)['""]?/i);
+		if (/\bsystem\s*:/.test(nl) || nl.includes("system prompt")) {
+			const systemMatch = nl.match(/\bsystem\s*:\s*['"]?([^'"\n.]+)['"]?/i);
 			if (systemMatch) {
 				steps.push({
 					type: "content",
@@ -139,14 +139,12 @@ export class NLParser {
 		const inputs: string[] = [];
 		
 		// Look for variable patterns
-		const variableMatches = nl.match(/\{\{(\w+)\}\}/g);
-		if (variableMatches) {
-			variableMatches.forEach(match => {
-				const varName = match.replace(/[{}]/g, "");
-				if (!inputs.includes(varName)) {
-					inputs.push(varName);
-				}
-			});
+		const variableMatches = nl.matchAll(/\{\{\s*([a-zA-Z_$][\w$]*)\s*\}\}/g);
+		for (const m of variableMatches) {
+			const varName = m[1];
+			if (!inputs.includes(varName)) {
+				inputs.push(varName);
+			}
 		}
 
 		// Look for input patterns
@@ -339,7 +337,8 @@ export class NLParser {
 			}
 
 			// Connect inputs to first AI step (not system prompts)
-			if (index === 0 || (index > 0 && plan.steps[index - 1].role === "system" && step.type === "ai")) {
+			const isFirstNonSystemAI = step.type === "ai" && !plan.steps.slice(0, index).some(s => s.type === "ai" && s.role !== "system");
+			if (isFirstNonSystemAI) {
 				plan.inputs.forEach(input => {
 					const inputNodeId = inputNodeIds.get(input);
 					if (inputNodeId) {

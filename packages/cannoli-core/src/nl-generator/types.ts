@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CanvasData } from "../persistor";
 
 /**
  * Intermediate Representation (IR) schema for Natural Language to Cannoli generation
@@ -11,9 +12,9 @@ export const cannoliIntentMetaSchema = z.object({
 	assumptions: z.array(z.string()).default([]),
 	defaults: z.object({
 		aiProvider: z.enum(["openai", "anthropic", "gemini", "ollama", "groq"]).default("openai"),
-		model: z.string().default("gpt-4"),
+		model: z.string().optional(),
 		temperature: z.number().default(0.7),
-		enableVision: z.boolean().default(true),
+		enableVision: z.boolean().optional(),
 		wrapInCannoliGroup: z.boolean().default(true),
 	}).default({}),
 });
@@ -41,8 +42,6 @@ export const cannoliIntentNodeSchema = z.object({
 		"link",
 		"group",
 	]),
-	// …rest of schema
-});
 	name: z.string().optional(),
 	text: z.string().optional(),
 	action: z.string().optional(),
@@ -55,8 +54,8 @@ export const cannoliIntentNodeSchema = z.object({
 	}).optional(),
 	attrs: z.object({
 		role: z.enum(["user", "system", "assistant"]).optional(),
-		width: z.number().default(250),
-		height: z.number().default(60),
+		width: z.number().default(250).optional(),
+		height: z.number().default(60).optional(),
 		color: z.union([
 			z.literal("auto"),
 			z.literal("1"), z.literal("2"), z.literal("3"),
@@ -72,8 +71,8 @@ export const cannoliIntentNodeSchema = z.object({
 		temperature: z.number().optional(),
 		role: z.string().optional(),
 		enableVision: z.boolean().optional(),
-		stop: z.string().optional(),
-	}).default({}),
+		stop: z.union([z.string(), z.array(z.string())]).optional(),
+	}).default({}).optional(),
 });
 
 export const cannoliIntentEdgeSchema = z.object({
@@ -81,7 +80,7 @@ export const cannoliIntentEdgeSchema = z.object({
 	to: z.string(),
 	type: z.enum(["basic", "variable", "logging", "config", "field", "choice", "list", "chat"]),
 	label: z.string().optional(),
-	chatHistory: z.enum(["default", "force", "suppress"]).default("default"),
+	chatHistory: z.enum(["default", "force", "suppress"]).default("default").optional(),
 	jsonPath: z.string().optional(),
 	limits: z.object({
 		messages: z.number().optional(),
@@ -94,7 +93,7 @@ export const cannoliIntentLayoutSchema = z.object({
 	laneHints: z.array(z.object({
 		id: z.string(),
 		lane: z.enum(["source", "process", "sink"]),
-	})).default([]),
+	})).default([]).optional(),
 });
 
 export const cannoliIntentSchema = z.object({
@@ -116,7 +115,7 @@ export type CannoliIntent = z.infer<typeof cannoliIntentSchema>;
  * Generation result containing the canvas, report and optional IR
  */
 export interface GenerationResult {
-	canvas: object;
+	canvas: CanvasData;
 	report: {
 		assumptions: string[];
 		warnings: string[];

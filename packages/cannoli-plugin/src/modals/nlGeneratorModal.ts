@@ -1,11 +1,11 @@
 import { App, Modal, Setting, TextAreaComponent, Notice } from "obsidian";
-import { generateCanvasFromNL } from "@deablabs/cannoli-core";
+import { generateCanvasFromNL, CanvasData, GenerationResult } from "@deablabs/cannoli-core";
 
 export class NLGeneratorModal extends Modal {
 	private textArea: TextAreaComponent;
-	private onSubmit: (canvas: object, report: any) => void;
+	private onSubmit: (canvas: CanvasData, report: GenerationResult["report"]) => void;
 
-	constructor(app: App, onSubmit: (canvas: object, report: any) => void) {
+	constructor(app: App, onSubmit: (canvas: CanvasData, report: GenerationResult["report"]) => void) {
 		super(app);
 		this.onSubmit = onSubmit;
 	}

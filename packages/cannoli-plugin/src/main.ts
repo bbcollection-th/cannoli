@@ -12,6 +12,7 @@ import {
 	SupportedProviders,
 	CanvasData,
 	CanvasGroupData,
+	GenerationResult,
 	ModelUsage,
 	LLMConfig,
 	GenericModelConfig,
@@ -36,6 +37,7 @@ import { ValTownModal } from "./modals/viewVals";
 import { EditValModal } from "./modals/editVal";
 import { RunPriceAlertModal } from "./modals/runPriceAlert";
 import { CannoliSettings, DEFAULT_SETTINGS } from "./settings/settings";
+import { CannoliSettingTab } from "./settings/settingsTab";
 import { NLGeneratorModal } from "./modals/nlGeneratorModal";
 
 export default class Cannoli extends Plugin {
@@ -370,10 +372,10 @@ export default class Cannoli extends Plugin {
 	openNLGenerator = async () => {
 		const modal = new NLGeneratorModal(
 			this.app,
-			async (canvas: object, report: any) => {
+			async (canvas: CanvasData, report: GenerationResult["report"]) => {
 				try {
 					// Create a new canvas file
-					const fileName = `Generated Cannoli ${Date.now()}.canvas`;
+					const fileName = `Generated Cannoli ${Date.now()}.cno.canvas`;
 					const filePath = fileName;
 
 					// Save the canvas as JSON
@@ -385,11 +387,13 @@ export default class Cannoli extends Plugin {
 					
 					// Show success notice with report
 					let noticeText = `Generated canvas: ${fileName}`;
-					if (report.assumptions.length > 0) {
-						noticeText += `\n\nAssumptions: ${report.assumptions.join(", ")}`;
+					const assumptions = Array.isArray(report?.assumptions) ? report!.assumptions : [];
+					const warnings = Array.isArray(report?.warnings) ? report!.warnings : [];
+					if (assumptions.length > 0) {
+						noticeText += `\n\nAssumptions: ${assumptions.join(", ")}`;
 					}
-					if (report.warnings.length > 0) {
-						noticeText += `\n\nWarnings: ${report.warnings.join(", ")}`;
+					if (warnings.length > 0) {
+						noticeText += `\n\nWarnings: ${warnings.join(", ")}`;
 					}
 					
 					new Notice(noticeText, 8000);
