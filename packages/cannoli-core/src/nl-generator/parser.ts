@@ -29,21 +29,24 @@ export class NLParser {
 	/**
 	 * Extract semantic plan from natural language
 	 */
-	private extractSemanticPlan(nl: string): SemanticPlan {
-		const normalized = nl.toLowerCase().trim();
-		const assumptions: string[] = [];
-		
-		// Simple pattern matching for common workflows
-		const plan: SemanticPlan = {
-			objective: this.extractObjective(normalized),
-			steps: this.extractSteps(normalized),
-			inputs: this.extractInputs(normalized),
-			outputs: this.extractOutputs(normalized),
-			configs: this.extractConfigs(normalized),
-			conditions: this.extractConditions(normalized),
-			loops: this.extractLoops(normalized),
-			parallel: this.extractParallel(normalized),
-		};
+private extractSemanticPlan(nl: string): SemanticPlan {
+    const normalized = nl.trim();
+    const assumptions: string[] = [];
+    
+    // Simple pattern matching for common workflows
+    const plan: SemanticPlan = {
+        objective: this.extractObjective(normalized),
+        steps: this.extractSteps(normalized),
+        inputs: this.extractInputs(normalized),
+        outputs: this.extractOutputs(normalized),
+        configs: this.extractConfigs(normalized),
+        conditions: this.extractConditions(normalized),
+        loops: this.extractLoops(normalized),
+        parallel: this.extractParallel(normalized),
+    };
+
+    // …rest of method…
+}
 
 		return plan;
 	}
