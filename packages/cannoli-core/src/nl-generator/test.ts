@@ -1,6 +1,12 @@
 import { generateCanvasFromNL, validateCanvas, explainCanvas } from "./index";
 
-// Simple inline test function for development purposes
+/**
+ * Runs a short asynchronous development test that generates a Cannoli canvas from a natural-language prompt.
+ *
+ * Calls generateCanvasFromNL with a sample prompt, inspects the returned report (assumptions, warnings, questions), validates the produced canvas, obtains an explanation, and performs basic structural checks (node/edge counts, presence of a "cannoli" group, and simple node-type counts). If the generator returns unresolved questions the test logs them and exits early.
+ *
+ * Side effects: writes diagnostic output to the console.
+ */
 export async function testNLGenerator(): Promise<void> {
 	console.log("Testing NL to Cannoli Generator...\n");
 	
