@@ -60,7 +60,7 @@ export class CanvasCompiler {
 	private compileNode(node: CannoliIntentNode, id: string): AllCanvasNodeData | null {
 		const width = node.attrs?.width ?? 250;
 		const height = node.attrs?.height ?? 60;
-		// couleur "auto" si non fournie
+		// default to "auto" color if not provided
 		const colorAuto = node.attrs?.color ?? "auto";
 
 		const baseNode = {
