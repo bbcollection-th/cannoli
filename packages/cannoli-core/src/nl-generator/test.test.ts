@@ -117,7 +117,7 @@ const mockExplain = t.mocker.fn((canvas: any) => {
   if (!canvas || !Array.isArray(canvas.nodes)) return "Invalid canvas.";
   const nodeCount = canvas.nodes.length;
   const edgeCount = Array.isArray(canvas.edges) ? canvas.edges.length : 0;
-  return `Canvas with ${nodeCount} nodes and ${edgeCount} edges.`;
+  return `Canvas with ${nodeCount} nodes and ${edgeCount} ${edgeCount === 1 ? "edge" : "edges"}.`;
 });
 
 // Use CommonJS-style jest/vi module mocking so it works across runners.
@@ -213,7 +213,7 @@ t.describe("nl-generator: explainCanvas", () => {
     };
     const summary = explainCanvas(canvas);
     t.expect(summary).toContain("3 nodes");
-    t.expect(summary).toContain("1 edges");
+    t.expect(summary).toContain("1 edge");
   });
 
   t.it("handles invalid canvas defensively (edge case)", () => {

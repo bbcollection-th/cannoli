@@ -127,12 +127,13 @@ export function validateCanvas(canvas: object): ValidationResult {
 
 		// Validate node structure
 		canvasData.nodes.forEach((node, index) => {
+			const nodeLabel = node.id ? `Node ${node.id}` : `Node at index ${index}`;
 			if (!node.id) errors.push(`Node at index ${index} missing required 'id' field`);
 			if (!node.type) errors.push(`Node at index ${index} missing required 'type' field`);
-			if (typeof node.x !== "number") errors.push(`Node ${node.id} missing valid 'x' coordinate`);
-			if (typeof node.y !== "number") errors.push(`Node ${node.id} missing valid 'y' coordinate`);
-			if (typeof node.width !== "number") errors.push(`Node ${node.id} missing valid 'width'`);
-			if (typeof node.height !== "number") errors.push(`Node ${node.id} missing valid 'height'`);
+			if (typeof node.x !== "number") errors.push(`${nodeLabel} missing valid 'x' coordinate`);
+			if (typeof node.y !== "number") errors.push(`${nodeLabel} missing valid 'y' coordinate`);
+			if (typeof node.width !== "number") errors.push(`${nodeLabel} missing valid 'width'`);
+			if (typeof node.height !== "number") errors.push(`${nodeLabel} missing valid 'height'`);
 		});
 
 		// Validate edge structure

@@ -137,24 +137,22 @@ private extractSemanticPlan(nl: string): SemanticPlan {
 	}
 
 	private extractInputs(nl: string): string[] {
-		const inputs: string[] = [];
+		const inputs = new Set<string>();
 		
 		// Look for variable patterns
 		const variableMatches = nl.matchAll(/\{\{\s*([a-zA-Z_$][\w$]*)\s*\}\}/g);
 		for (const m of variableMatches) {
 			const varName = m[1];
-			if (!inputs.includes(varName)) {
-				inputs.push(varName);
-			}
+			inputs.add(varName);
 		}
 
 		// Look for input patterns
 		const inputMatch = nl.match(/input[:\s]+(\w+)/i);
-		if (inputMatch && !inputs.includes(inputMatch[1])) {
-			inputs.push(inputMatch[1]);
+		if (inputMatch) {
+			inputs.add(inputMatch[1]);
 		}
 
-		return inputs;
+		return Array.from(inputs);
 	}
 
 	private extractOutputs(nl: string): string[] {
@@ -338,7 +336,7 @@ private extractSemanticPlan(nl: string): SemanticPlan {
 			}
 
 			// Connect inputs to first AI step (not system prompts)
-			const isFirstNonSystemAI = step.type === "ai" && !plan.steps.slice(0, index).some(s => s.type === "ai" && s.role !== "system");
+			const isFirstNonSystemAI = this.isFirstNonSystemAI(step, index, plan.steps);
 			if (isFirstNonSystemAI) {
 				plan.inputs.forEach(input => {
 					const inputNodeId = inputNodeIds.get(input);
@@ -456,6 +454,11 @@ private extractSemanticPlan(nl: string): SemanticPlan {
 			edges,
 			layout: { strategy: "dag", laneHints: [] },
 		};
+	}
+
+	private isFirstNonSystemAI(step: WorkflowStep, index: number, steps: WorkflowStep[]): boolean {
+		return step.type === "ai" && 
+			   !steps.slice(0, index).some(s => s.type === "ai" && s.role !== "system");
 	}
 }
 

@@ -268,25 +268,25 @@ export class CanvasCompiler {
 			case "chat": {
 				let chatLabel = edge.label || "";
 
- 				// Add limits to label
- 				if (edge.limits?.messages) {
- 					chatLabel = edge.limits.messages.toString();
- 				} else if (edge.limits?.tokens) {
- 					chatLabel = `#${edge.limits.tokens}`;
- 				}
+				// Add limits to label
+				if (edge.limits?.messages) {
+					chatLabel = edge.limits.messages.toString();
+				} else if (edge.limits?.tokens) {
+					chatLabel = `#${edge.limits.tokens}`;
+				}
 
- 				// Add history modifiers
- 				if (edge.chatHistory === "suppress") {
- 					chatLabel += "~";
- 				} else if (edge.chatHistory === "force") {
- 					chatLabel += "|";
- 				}
+				// Add history modifiers
+				if (edge.chatHistory === "suppress") {
+					chatLabel += "~";
+				} else if (edge.chatHistory === "force") {
+					chatLabel += "|";
+				}
 
- 				return {
- 					...baseEdge,
- 					color: "4", // Green for chat
- 					label: chatLabel || undefined,
- 				};
+				return {
+					...baseEdge,
+					color: "4", // Green for chat
+					label: chatLabel || undefined,
+				};
 			}
 
 			default:
@@ -432,12 +432,21 @@ export class CanvasCompiler {
 	 */
 	private generateId(): string {
 		// Generate 16-character hex ID similar to existing Cannoli patterns
-		const chars = "0123456789abcdef";
-		let result = "";
-		for (let i = 0; i < 16; i++) {
-			result += chars[Math.floor(Math.random() * chars.length)];
+		if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+			const bytes = new Uint8Array(8);
+			crypto.getRandomValues(bytes);
+			return Array.from(bytes)
+				.map(b => b.toString(16).padStart(2, '0'))
+				.join('');
+		} else {
+			// Fallback pour les environnements sans crypto
+			const chars = "0123456789abcdef";
+			let result = "";
+			for (let i = 0; i < 16; i++) {
+				result += chars[Math.floor(Math.random() * chars.length)];
+			}
+			return result;
 		}
-		return result;
 	}
 
 	/**

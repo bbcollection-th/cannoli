@@ -46,7 +46,7 @@ export const cannoliIntentNodeSchema = z.object({
 	text: z.string().optional(),
 	action: z.string().optional(),
 	file: z.string().optional(),
-	url: z.string().optional(),
+	url: z.string().url().optional(),
 	reference: z.enum(["note", "floating", "dynamic"]).optional(),
 	group: z.object({
 		type: z.enum(["basic", "loop", "parallel", "cannoli"]),
@@ -66,7 +66,7 @@ export const cannoliIntentNodeSchema = z.object({
 	config: z.object({
 		provider: z.string().optional(),
 		apiKey: z.string().optional(),
-		baseURL: z.string().optional(),
+		baseURL: z.string().url().optional(),
 		model: z.string().optional(),
 		temperature: z.number().optional(),
 		role: z.string().optional(),
@@ -93,7 +93,7 @@ export const cannoliIntentLayoutSchema = z.object({
 	laneHints: z.array(z.object({
 		id: z.string(),
 		lane: z.enum(["source", "process", "sink"]),
-	})).optional().default([]),
+	})).default([]),
 });
 
 export const cannoliIntentSchema = z.object({
@@ -136,7 +136,7 @@ export interface ValidationResult {
  * Options for generation
  */
 export interface GenerationOptions {
-	aiProvider?: string;
+	aiProvider?: "openai" | "anthropic" | "gemini" | "ollama" | "groq";
 	model?: string;
 	temperature?: number;
 	enableVision?: boolean;

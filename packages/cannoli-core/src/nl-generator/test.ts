@@ -1,4 +1,5 @@
 import { generateCanvasFromNL, validateCanvas, explainCanvas } from "./index";
+import type { CanvasData } from "../persistor";
 
 /**
  * Development-only inline test that generates, validates, and inspects a canvas from a short natural-language prompt.
@@ -52,13 +53,14 @@ export async function testNLGenerator(): Promise<void> {
 		console.log(`Explanation: ${explanation}`);
 		
 		// Verify basic structure
-		const canvas = result.canvas as any;
+		const canvas = result.canvas as CanvasData;
 		if (canvas.nodes && canvas.edges) {
 			console.log("✅ Canvas has valid structure with nodes and edges");
 			
 			// Check for cannoli group
-			const cannoliGroup = canvas.nodes.find((n: any) => 
+			const cannoliGroup = canvas.nodes.find(n => 
 				n.type === "group" && 
+				"label" in n &&
 				typeof n.label === "string" && 
 				n.label.toLowerCase() === "cannoli"
 			);
@@ -67,8 +69,8 @@ export async function testNLGenerator(): Promise<void> {
 			}
 			
 			// Count node types
-			const aiNodes = canvas.nodes.filter((n: any) => n.type === "text" && (!n.color || n.color === "0"));
-			const contentNodes = canvas.nodes.filter((n: any) => n.type === "text" && n.color === "6");
+			const aiNodes = canvas.nodes.filter(n => n.type === "text" && (!("color" in n) || !n.color || n.color === "0"));
+			const contentNodes = canvas.nodes.filter(n => n.type === "text" && "color" in n && n.color === "6");
 			console.log(`📊 Found ${aiNodes.length} AI nodes, ${contentNodes.length} content nodes`);
 		}
 		
