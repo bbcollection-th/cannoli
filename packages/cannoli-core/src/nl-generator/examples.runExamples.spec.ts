@@ -28,19 +28,13 @@ describe("runExamples", () => {
   });
 });
 
-jestOrViMock("./index");
-
-// Utility to mock the NL generator module used by the SUT
-function jestOrViMock(path: string) {
+{
+  // Enregistrer le mock dès le top-level pour éviter tout souci d’ordre de chargement.
   const g: any = globalThis as any;
-  if (g.jest && typeof g.jest.mock === "function") {
-    g.jest.mock(path, () => ({
-      generateCanvasFromNL: g.jest.fn(),
-    }));
-  } else if (g.vi && typeof g.vi.mock === "function") {
-    g.vi.mock(path, () => ({
-      generateCanvasFromNL: g.vi.fn(),
-    }));
+  if (g?.jest?.mock) {
+    g.jest.mock("./index", () => ({ generateCanvasFromNL: g.jest.fn() }));
+  } else if (g?.vi?.mock) {
+    g.vi.mock("./index", () => ({ generateCanvasFromNL: g.vi.fn() }));
   } else {
     throw new Error("No supported test runner globals (jest/vi) found");
   }
