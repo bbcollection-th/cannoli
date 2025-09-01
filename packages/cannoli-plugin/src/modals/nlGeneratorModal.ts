@@ -45,7 +45,7 @@ export class NLGeneratorModal extends Modal {
 				text
 					.setPlaceholder("e.g., 'Ask the AI to summarize {{article}} and write it to a note'")
 					.setValue("");
-				// Focus après rendu
+				// Focus after render
 				window.setTimeout(() => {
 					text.inputEl.focus();
 					text.inputEl.style.height = "150px";
