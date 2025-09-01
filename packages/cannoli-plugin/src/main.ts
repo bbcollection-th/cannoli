@@ -387,8 +387,7 @@ export default class Cannoli extends Plugin {
 					
 					// Show success notice with report
 					let noticeText = `Generated canvas: ${fileName}`;
-					const assumptions = Array.isArray(report?.assumptions) ? report!.assumptions : [];
-					const warnings = Array.isArray(report?.warnings) ? report!.warnings : [];
+					const warnings = report?.warnings ?? [];
 					if (assumptions.length > 0) {
 						noticeText += `\n\nAssumptions: ${assumptions.join(", ")}`;
 					}
