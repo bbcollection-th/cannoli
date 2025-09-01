@@ -29,9 +29,10 @@ type SafeParseResult<T> =
   | { success: true; data: T }
   | { success: false; error?: any };
 
-const safeParseMock = vi.fn<[(unknown)], SafeParseResult<any>>();
-const parseMock = vi.fn<(unknown), any>();
+// packages/cannoli-core/src/nl-generator/index.test.ts
 
+const safeParseMock = vi.fn<[(unknown)], SafeParseResult<any>>();
+const parseMock     = vi.fn<[(unknown)], any>();
 vi.mock("./types", async () => {
   // Provide minimal runtime types used by SUT and tests
   // cannoliIntentSchema with parse and safeParse
