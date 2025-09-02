@@ -112,7 +112,6 @@ import { DEFAULT_SETTINGS as REAL_DEFAULTS } from "../settings/settings";
     contentIsColorless: false,
     chatFormatString: REAL_DEFAULTS.chatFormatString,
     enableVision: false,
-  };
     tracingConfig: undefined,
     // LLM provider and keys
     llmProvider: "openai",
@@ -178,6 +177,12 @@ describe("Geometry helpers", () => {
     const c = (plugin as any).createRectangle(60, 60, 10, 10);
     expect((plugin as any).overlaps(a, b)).toBe(true);
     expect((plugin as any).overlaps(a, c)).toBe(false);
+  });
+
+  it("overlaps is false when rectangles only touch", () => {
+    const a = (plugin as any).createRectangle(0, 0, 10, 10);
+    const b = (plugin as any).createRectangle(10, 0, 5, 5); // touche à droite
+    expect((plugin as any).overlaps(a, b)).toBe(false);
   });
 });
 

@@ -18,15 +18,12 @@ export async function generateSampleCanvases(): Promise<void> {
 	console.log("🎨 Generating Sample Canvas Files\n");
 
 	// Create output directory
-import { writeFileSync, mkdirSync } from "fs";
-import { join } from "path";
-import { tmpdir } from "os";
-
+	const { tmpdir } = require("os");
 	const outputDir = join(tmpdir(), "sample-cannoli-canvases");
 	try {
 		mkdirSync(outputDir, { recursive: true });
 	} catch (error) {
-		// Directory might already exist
+		console.log(`   ⚠️  Unable to create ${outputDir}: ${error instanceof Error ? error.message : String(error)}`);
 	}
 
 	const examples = [
@@ -77,8 +74,8 @@ import { tmpdir } from "os";
 			}
 
 			// Add metadata to the canvas
-			const VERSION = "1.0-1.0";
-			const GENERATOR = "Cannoli NL Generator";
+			const VERSION = process.env.npm_package_version ?? "0.0.0-dev";
+			const GENERATOR = process.env.CANNOLI_GENERATOR_NAME ?? "Cannoli NL Generator";
 			const canvasWithMetadata = {
 				...result.canvas,
 				metadata: {

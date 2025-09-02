@@ -1,5 +1,5 @@
 import { App, Modal, Setting, TextAreaComponent, Notice } from "obsidian";
-import { generateCanvasFromNL, CanvasData, GenerationResult } from "@deablabs/cannoli-core";
+import { generateCanvasFromNL, CanvasData, GenerationResult, exampleWorkflows } from "@deablabs/cannoli-core";
 
 export class NLGeneratorModal extends Modal {
   private textArea!: TextAreaComponent;
@@ -24,16 +24,10 @@ export class NLGeneratorModal extends Modal {
 		examplesEl.createEl("h3", { text: "Examples:" });
 		const examplesList = examplesEl.createEl("ul");
 		
-		const examples = [
-			"Send 'Hello world!' to the AI and write the response in a content node",
-			"Ask the AI 'What's the weather like?' and save the answer",
-			"Create a system prompt 'You are a helpful assistant', then ask AI to translate {{text}}",
-			"Ask 'Do you want coffee?' with yes/no choice, if yes, show a modal asking for coffee type",
-		];
-
-		examples.forEach(example => {
+		// Use examples from core package to avoid drift
+		exampleWorkflows.forEach(ex => {
 			const li = examplesList.createEl("li");
-			li.createEl("code", { text: example });
+			li.createEl("code", { text: ex.input });
 		});
 
 		// Input area
@@ -60,16 +54,26 @@ export class NLGeneratorModal extends Modal {
 		buttonContainer.style.marginTop = "20px";
 
 		// Cancel button
-		const cancelButton = buttonContainer.createEl("button", { text: "Cancel" });
+		const cancelButton = buttonContainer.createEl("button", { text: "Cancel", attr: { type: "button" } });
 		cancelButton.onclick = () => this.close();
 
 		// Generate button
 		const generateButton = buttonContainer.createEl("button", { 
 			text: "Generate Canvas",
-			cls: "mod-cta"
+			cls: "mod-cta",
+			attr: { type: "button" }
 		});
 		generateButton.onclick = async () => {
-			await this.handleGenerate();
+			generateButton.disabled = true;
+			cancelButton.disabled = true;
+			generateButton.setAttr("aria-busy", "true");
+			try {
+				await this.handleGenerate();
+			} finally {
+				generateButton.disabled = false;
+				cancelButton.disabled = false;
+				generateButton.removeAttribute("aria-busy");
+			}
 		};
 
 		// Add some basic styling

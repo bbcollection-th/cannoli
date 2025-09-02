@@ -161,6 +161,8 @@ function analyzeCanvasFeatures(canvas: any): string[] {
 	if (edgeTypes.variable > 0) features.push(`${edgeTypes.variable} Variable edge${edgeTypes.variable > 1 ? "s" : ""}`);
 	if (edgeTypes.config > 0) features.push(`${edgeTypes.config} Config edge${edgeTypes.config > 1 ? "s" : ""}`);
 	if (edgeTypes.choice > 0) features.push(`${edgeTypes.choice} Choice edge${edgeTypes.choice > 1 ? "s" : ""}`);
+	if (edgeTypes.chat > 0) features.push(`${edgeTypes.chat} Chat edge${edgeTypes.chat > 1 ? "s" : ""}`);
+	if (edgeTypes.list > 0) features.push(`${edgeTypes.list} List edge${edgeTypes.list > 1 ? "s" : ""}`);
 	if (edgeTypes.field > 0) features.push(`${edgeTypes.field} Field edge${edgeTypes.field > 1 ? "s" : ""}`);
 	
 	return features.length > 0 ? features : ["Basic structure"];
