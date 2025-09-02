@@ -60,7 +60,7 @@ private extractSemanticPlan(nl: string): SemanticPlan {
 		
 		// Look for system prompts first
 		if (/\bsystem\s*:/.test(nl) || nl.includes("system prompt")) {
-			const systemMatch = nl.match(/\bsystem\s*:\s*['"]?([^'"\n.]+)['"]?/i);
+			const systemMatch = nl.match(/\bsystem\s*:\s*["“']?(.+?)["”']?(?:\r?\n|$)/i);
 			if (systemMatch) {
 				steps.push({
 					type: "content",
