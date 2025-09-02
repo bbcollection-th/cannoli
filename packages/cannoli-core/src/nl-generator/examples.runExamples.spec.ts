@@ -18,7 +18,11 @@ describe("runExamples", () => {
     // Charger le SUT après enregistrement des mocks pour garantir que le mock de ./index soit actif
     ExamplesModule = await import("./examples");
     // Spy on console.log once for the whole suite
-    jest.spyOn(console, "log").mockImplementation(() => {});
+    // Spy runner-agnostique + idempotent
+    if (!(console as any)._spyAttached) {
+      j.spyOn(console, "log").mockImplementation(() => {});
+      (console as any)._spyAttached = true;
+    }
   });
 
   // …rest of your tests, e.g.:
