@@ -12,6 +12,7 @@ import {
 	SupportedProviders,
 	CanvasData,
 	CanvasGroupData,
+	GenerationResult,
 	ModelUsage,
 	LLMConfig,
 	GenericModelConfig,
@@ -37,6 +38,7 @@ import { EditValModal } from "./modals/editVal";
 import { RunPriceAlertModal } from "./modals/runPriceAlert";
 import { CannoliSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { CannoliSettingTab } from "./settings/settingsTab";
+import { NLGeneratorModal } from "./modals/nlGeneratorModal";
 
 export default class Cannoli extends Plugin {
 	settings: CannoliSettings;
@@ -103,6 +105,8 @@ export default class Cannoli extends Plugin {
 		}
 
 		this.createCopyCanvasToClipboardCommand();
+
+		this.createNLGeneratorCommand();
 
 		this.createViewValsCommand();
 
@@ -220,6 +224,15 @@ export default class Cannoli extends Plugin {
 			id: "bake",
 			name: "Bake",
 			callback: this.bake,
+			icon: "cannoli",
+		});
+	};
+
+	createNLGeneratorCommand = () => {
+		this.addCommand({
+			id: "generate-cannoli-from-nl",
+			name: "Generate Cannoli from Natural Language",
+			callback: this.openNLGenerator,
 			icon: "cannoli",
 		});
 	};
@@ -352,6 +365,43 @@ export default class Cannoli extends Plugin {
 			this.settings.valTownAPIKey,
 			this.bakeToValTown,
 			this.createCanvas,
+		);
+		modal.open();
+	};
+
+	openNLGenerator = async () => {
+		const modal = new NLGeneratorModal(
+			this.app,
+			async (canvas: CanvasData, report: GenerationResult["report"]) => {
+				try {
+					// Create a new canvas file
+					const fileName = `Generated Cannoli ${Date.now()}.cno.canvas`;
+					const filePath = fileName;
+
+					// Save the canvas as JSON
+					const canvasJson = JSON.stringify(canvas, null, 2);
+					const file = await this.app.vault.create(filePath, canvasJson);
+					
+					// Open the canvas
+					await this.app.workspace.openLinkText(file.path, "");
+					
+					// Show success notice with report
+					let noticeText = `Generated canvas: ${fileName}`;
+					const warnings = report?.warnings ?? [];
+					if (assumptions.length > 0) {
+						noticeText += `\n\nAssumptions: ${assumptions.join(", ")}`;
+					}
+					if (warnings.length > 0) {
+						noticeText += `\n\nWarnings: ${warnings.join(", ")}`;
+					}
+					
+					new Notice(noticeText, 8000);
+					
+				} catch (error) {
+					console.error("Failed to create canvas:", error);
+					new Notice(`Failed to create canvas: ${error instanceof Error ? error.message : "Unknown error"}`);
+				}
+			}
 		);
 		modal.open();
 	};
